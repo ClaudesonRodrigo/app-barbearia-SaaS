@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin - AgendaBarber</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="font-body bg-gray-900 text-gray-300">
+
+    <!-- Ecrã de Carregamento Inicial -->
+    <div id="full-page-loader" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
+        <p class="text-white text-lg">A verificar permissões...</p>
+    </div>
+
+    <!-- Container do Login (Mostrado se o utilizador não for o Super Admin) -->
+    <div id="login-container" class="min-h-screen flex-col items-center justify-center p-4 hidden">
+        <div class="w-full max-w-md text-center">
+            <h1 class="font-title text-4xl font-bold text-amber-400">Acesso Restrito</h1>
+            <p class="text-gray-400 mt-2 mb-6">Esta área é reservada para o administrador da plataforma.</p>
+            <button id="admin-login-button" class="cta-button bg-amber-400 text-gray-900 font-bold text-lg py-3 px-8 rounded-lg">Entrar como Administrador</button>
+            <p id="login-message" class="mt-4 text-red-400"></p>
+        </div>
+    </div>
+
+    <!-- Container do Super Admin Dashboard (Mostrado se for o Super Admin) -->
+    <div id="dashboard-container" class="hidden">
+        <header class="bg-gray-800 shadow-md">
+            <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+                <div class="font-title text-2xl font-bold text-white">
+                    Super Admin<span class="text-amber-400">Panel</span>
+                </div>
+                <div>
+                    <span id="user-email" class="text-sm text-gray-400 mr-4"></span>
+                    <button id="logout-button" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm">Sair</button>
+                </div>
+            </nav>
+        </header>
+
+        <main class="container mx-auto p-6">
+            <h1 class="text-3xl font-bold text-white mb-6">Visão Geral da Plataforma</h1>
+
+            <!-- Métricas Principais -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-gray-800 p-6 rounded-lg text-center">
+                    <p class="text-gray-400 text-sm">Total de Barbearias</p>
+                    <p id="total-shops" class="text-4xl font-bold text-amber-400">0</p>
+                </div>
+                 <div class="bg-gray-800 p-6 rounded-lg text-center">
+                    <p class="text-gray-400 text-sm">Total de Agendamentos</p>
+                    <p id="total-appointments" class="text-4xl font-bold text-amber-400">0</p>
+                </div>
+                 <div class="bg-gray-800 p-6 rounded-lg text-center">
+                    <p class="text-gray-400 text-sm">Novos Registos (Mês)</p>
+                    <p id="new-shops-month" class="text-4xl font-bold text-amber-400">0</p>
+                </div>
+            </div>
+
+            <!-- Tabela de Barbearias -->
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-2xl font-bold text-white mb-4">Barbearias Registadas</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="text-left py-3 px-4">Nome da Barbearia</th>
+                                <th class="text-left py-3 px-4">Email do Dono</th>
+                                <th class="text-left py-3 px-4">Status</th>
+                                <th class="text-left py-3 px-4">Data de Registo</th>
+                                <th class="text-left py-3 px-4">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shops-table-body">
+                            <!-- Linhas da tabela serão inseridas aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Script Integrado do Super Admin -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Configuração ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M",
+            authDomain: "barbeariasergipana-b32b6.firebaseapp.com",
+            projectId: "barbeariasergipana-b32b6",
+            storageBucket: "barbeariasergipana-b32b6.firebasestorage.app",
+            messagingSenderId: "562815971114",
+            appId: "1:562815971114:web:73e811a601c6b64e8ab853",
+            measurementId: "G-1M4H1Z3TV5"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- Segurança: Defina o seu UID de Super Admin aqui ---
+        const SUPER_ADMIN_UID = "ftNGvDucWfZmdsrrZ9ffpWebOUU2"; 
+
+        // --- Elementos do DOM ---
+        const loader = document.getElementById('full-page-loader');
+        const loginContainer = document.getElementById('login-container');
+        const dashboardContainer = document.getElementById('dashboard-container');
+        const adminLoginButton = document.getElementById('admin-login-button');
+        const logoutButton = document.getElementById('logout-button');
+        const loginMessage = document.getElementById('login-message');
+        const shopsTableBody = document.getElementById('shops-table-body');
+        
+        // --- Funções da UI ---
+        function showView(viewName) {
+            loader.style.display = 'none';
+            loginContainer.style.display = 'none';
+            dashboardContainer.style.display = 'none';
+            document.getElementById(viewName).style.display = 'block';
+             if (viewName === 'login-container') {
+                document.getElementById(viewName).style.display = 'flex';
+            }
+        }
+
+        // --- Lógica Principal ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user && user.uid === SUPER_ADMIN_UID) {
+                // Utilizador é o Super Admin
+                document.getElementById('user-email').textContent = user.email;
+                loadDashboardData();
+                showView('dashboard-container');
+            } else {
+                // Utilizador não é o Super Admin ou não está logado
+                if (user) {
+                    // Se estiver logado com uma conta não-admin, faz logout
+                    signOut(auth); 
+                }
+                showView('login-container');
+            }
+        });
+        
+        async function loadDashboardData() {
+            const shopsRef = collection(db, "shops");
+            onSnapshot(shopsRef, (snapshot) => {
+                const shops = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Atualiza as métricas
+                document.getElementById('total-shops').textContent = shops.length;
+                // (Lógica para outros contadores seria adicionada aqui)
+
+                // Preenche a tabela
+                shopsTableBody.innerHTML = '';
+                shops.forEach(shop => {
+                    const date = shop.createdAt?.toDate ? shop.createdAt.toDate().toLocaleDateString('pt-BR') : 'N/A';
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-700 hover:bg-gray-700/50';
+                    row.innerHTML = `
+                        <td class="py-3 px-4">${shop.shopName}</td>
+                        <td class="py-3 px-4 text-gray-400">${shop.ownerEmail || 'Email não disponível'}</td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${shop.subscriptionStatus === 'active' ? 'bg-green-500 text-green-900' : 'bg-yellow-500 text-yellow-900'}">
+                                ${shop.subscriptionStatus || 'trialing'}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4">${date}</td>
+                        <td class="py-3 px-4"><button class="text-amber-400 hover:underline text-sm">Gerir</button></td>
+                    `;
+                    shopsTableBody.appendChild(row);
+                });
+            });
+        }
+
+        // --- Event Listeners ---
+        adminLoginButton.addEventListener('click', async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+                // O onAuthStateChanged tratará do resto
+            } catch (error) {
+                console.error("Erro no login de admin:", error);
+                loginMessage.textContent = "Falha no login. Tente novamente.";
+            }
+        });
+
+        logoutButton.addEventListener('click', () => {
+            signOut(auth);
+        });
+
+    </script>
+</body>
+</html>
