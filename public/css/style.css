@@ -1,0 +1,109 @@
+/* public/css/style.css */
+
+/* Define a fonte padrão para o corpo da aplicação. */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Define a fonte especial para os títulos principais. */
+.font-title { 
+    font-family: 'Playfair Display', serif; 
+}
+
+/* Define a fonte padrão para o corpo do texto. */
+.font-body { 
+    font-family: 'Inter', sans-serif; 
+}
+
+/* Fundo da secção principal (Hero) na página de vendas. */
+.hero-bg { 
+    background-color: #0B0A0A; 
+}
+
+/* Efeito de gradiente para o texto principal. */
+.gradient-text {
+    background: -webkit-linear-gradient(45deg, #FBBF24, #D97706);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Estilo e animação para os botões de chamada para ação (Call to Action). */
+.cta-button {
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2);
+}
+.cta-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+}
+
+/* Estilo e animação para os cartões de funcionalidades. */
+.feature-card {
+    transition: all 0.3s ease;
+    border: 1px solid #374151;
+}
+.feature-card:hover {
+    transform: translateY(-5px);
+    border-color: #FBBF24;
+}
+
+
+/* --- Estilização da Barra de Scroll --- */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #111827; /* gray-900 */
+}
+::-webkit-scrollbar-thumb {
+    background: #4b5563; /* gray-600 */
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #6b7280; /* gray-500 */
+}
+
+/* --- Efeitos de Hover --- */
+
+.time-slot:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* --- Estilos de Componentes Específicos --- */
+
+/* Altera a cor do ícone do calendário para ser visível no tema escuro. */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* --- Animação de Skeleton Loading --- */
+
+.skeleton {
+    background-color: #374151; /* gray-700 */
+    position: relative;
+    overflow: hidden;
+}
+.skeleton::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 150%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+    animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+    100% {
+        left: 150%;
+    }
+}
+
+/* --- Dimensões dos Elementos de Esqueleto --- */
+
+.skeleton-img { width: 96px; height: 96px; border-radius: 50%; }
+.skeleton-title { height: 28px; width: 60%; border-radius: 0.5rem; }
+.skeleton-text { height: 20px; width: 80%; border-radius: 0.5rem; margin-top: 8px; }
+.skeleton-price { height: 24px; width: 40%; border-radius: 0.5rem; margin-top: 12px; }

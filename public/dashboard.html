@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - AgendaBarber</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="font-body bg-gray-900 text-gray-300">
+
+    <!-- Ecrã de Carregamento Inicial -->
+    <div id="full-page-loader" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
+        <p class="text-white text-lg">A verificar sessão...</p>
+    </div>
+
+    <!-- Container do Login (Mostrado se o utilizador não estiver autenticado) -->
+    <div id="login-container" class="min-h-screen flex flex-col items-center justify-center p-4" style="display: none;">
+        <div class="w-full max-w-md">
+            <header class="text-center mb-8">
+                <a href="index.html" class="font-title text-4xl font-bold text-white">
+                    Agenda<span class="text-amber-400">Barber</span>
+                </a>
+                <p class="text-gray-400 mt-2">Acesse o painel da sua barbearia.</p>
+            </header>
+            <main class="bg-gray-800 p-8 rounded-lg shadow-2xl">
+                <form id="login-form" class="space-y-6">
+                    <div>
+                        <label for="owner-email" class="block text-sm font-bold text-gray-300 mb-2">Seu Email</label>
+                        <input type="email" id="owner-email" name="owner-email" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
+                    </div>
+                    <div>
+                        <label for="owner-password" class="block text-sm font-bold text-gray-300 mb-2">Sua Senha</label>
+                        <input type="password" id="owner-password" name="owner-password" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
+                    </div>
+                    <button type="submit" id="login-button" class="cta-button w-full bg-amber-500 text-gray-900 font-bold text-lg py-3 px-8 rounded-lg">Entrar</button>
+                </form>
+                <div id="form-message" class="mt-4 text-center text-red-400"></div>
+            </main>
+            <footer class="text-center mt-6">
+                <p class="text-sm text-gray-500">Não tem uma conta? <a href="register.html" class="font-bold text-amber-400 hover:underline">Crie uma agora</a></p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Container do Dashboard (Mostrado se o utilizador estiver autenticado) -->
+    <div id="dashboard-container" style="display: none;">
+        <header id="dashboard-header" class="bg-gray-800 shadow-md">
+            <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+                <div class="font-title text-2xl font-bold text-white">
+                    Agenda<span class="text-amber-400">Barber</span>
+                </div>
+                <div>
+                    <span id="user-email" class="text-sm text-gray-400 mr-4"></span>
+                    <button id="logout-button" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm">Sair</button>
+                </div>
+            </nav>
+        </header>
+
+        <main id="dashboard-main" class="container mx-auto p-6">
+            <div id="welcome-section" class="bg-gray-800 p-6 rounded-lg mb-8">
+                <h1 id="shop-name-title" class="text-3xl font-bold text-white">Carregando barbearia...</h1>
+                <p class="text-gray-400 mt-2">Este é o seu centro de controlo. Gira os seus serviços, barbeiros e agendamentos aqui.</p>
+                <div class="mt-4 bg-gray-700 p-4 rounded-lg">
+                    <p class="text-sm font-bold text-amber-300">Link da sua página de agendamento:</p>
+                    <a id="public-link" href="#" target="_blank" class="text-amber-400 hover:underline break-all">A gerar link...</a>
+                    <button id="copy-link-button" class="ml-2 bg-gray-600 text-white px-3 py-1 text-xs font-bold rounded hover:bg-gray-500">Copiar</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 space-y-8">
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <h2 class="text-2xl font-bold text-white mb-4">Gerir Serviços</h2>
+                        <form id="service-form" class="space-y-4">
+                            <input type="text" id="service-name" placeholder="Nome do Serviço" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <input type="text" id="service-price" placeholder="Preço (ex: R$ 40,00)" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <input type="number" id="service-duration" placeholder="Duração (em minutos)" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <textarea id="service-description" placeholder="Breve descrição do serviço" class="w-full p-3 bg-gray-700 rounded-lg" rows="2" required></textarea>
+                            <button type="submit" class="w-full bg-amber-500 text-gray-900 font-bold py-2 rounded-lg hover:bg-amber-600">Adicionar Serviço</button>
+                        </form>
+                        <div id="services-list-admin" class="mt-6 space-y-2"></div>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <h2 class="text-2xl font-bold text-white mb-4">Gerir Barbeiros</h2>
+                        <form id="barber-form" class="space-y-4">
+                            <input type="text" id="barber-name" placeholder="Nome do Barbeiro" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <input type="text" id="barber-specialty" placeholder="Especialidade" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <button type="submit" class="w-full bg-amber-500 text-gray-900 font-bold py-2 rounded-lg hover:bg-amber-600">Adicionar Barbeiro</button>
+                        </form>
+                        <div id="barbers-list-admin" class="mt-6 space-y-2"></div>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 bg-gray-800 p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold text-white mb-4">Agenda do Dia</h2>
+                    <input type="date" id="admin-date-picker-dash" class="w-full p-3 bg-gray-700 rounded-lg mb-6">
+                    <div id="appointments-list-admin"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Script Integrado do Dashboard -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Configuração ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M",
+            authDomain: "barbeariasergipana-b32b6.firebaseapp.com",
+            projectId: "barbeariasergipana-b32b6",
+            storageBucket: "barbeariasergipana-b32b6.firebasestorage.app",
+            messagingSenderId: "562815971114",
+            appId: "1:562815971114:web:73e811a601c6b64e8ab853",
+            measurementId: "G-1M4H1Z3TV5"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- Estado Global ---
+        let currentShop = null;
+
+        // --- Elementos do DOM ---
+        const loader = document.getElementById('full-page-loader');
+        const loginContainer = document.getElementById('login-container');
+        const dashboardContainer = document.getElementById('dashboard-container');
+        const loginForm = document.getElementById('login-form');
+        const logoutButton = document.getElementById('logout-button');
+        
+        // --- Funções de Controlo da UI ---
+        function showView(viewName) {
+            loader.style.display = 'none';
+            loginContainer.style.display = 'none';
+            dashboardContainer.style.display = 'none';
+
+            if (viewName === 'login') {
+                loginContainer.style.display = 'flex';
+            } else if (viewName === 'dashboard') {
+                dashboardContainer.style.display = 'block';
+            }
+        }
+
+        // --- Lógica Principal ---
+        onAuthStateChanged(auth, async (user) => {
+            const isNewRegistration = sessionStorage.getItem('isNewRegistration') === 'true';
+
+            if (user) {
+                // Utilizador está logado, vamos buscar os dados da loja
+                loader.innerHTML = `<p class="text-white text-lg">A carregar dados da sua barbearia...</p>`;
+                
+                const shopsRef = collection(db, 'shops');
+                const q = query(shopsRef, where("ownerUid", "==", user.uid));
+                
+                let shopData = null;
+                // Lógica de retentativa para o caso de um novo registo
+                for (let i = 0; i < 5; i++) {
+                    const querySnapshot = await getDocs(q);
+                    if (!querySnapshot.empty) {
+                        const shopDoc = querySnapshot.docs[0];
+                        shopData = { id: shopDoc.id, ...shopDoc.data() };
+                        break; 
+                    }
+                    if (isNewRegistration) {
+                         await new Promise(res => setTimeout(res, 1000));
+                    } else {
+                        break;
+                    }
+                }
+                
+                if (isNewRegistration) {
+                    sessionStorage.removeItem('isNewRegistration');
+                }
+
+                if (shopData) {
+                    currentShop = shopData;
+                    initializeDashboard(user);
+                    showView('dashboard');
+                } else {
+                    alert("Não foi possível encontrar os dados da sua barbearia. Por favor, tente fazer login novamente.");
+                    signOut(auth);
+                }
+            } else {
+                // Utilizador não está logado, mostra o ecrã de login
+                showView('login');
+            }
+        });
+
+        // --- Funções do Dashboard ---
+        function initializeDashboard(user) {
+            document.getElementById('user-email').textContent = user.email;
+            document.getElementById('shop-name-title').textContent = currentShop.shopName;
+            const publicLink = document.getElementById('public-link');
+            publicLink.href = `barbearia.html?shop=${currentShop.id}`;
+            publicLink.textContent = publicLink.href;
+
+            const adminDatePicker = document.getElementById('admin-date-picker-dash');
+            const today = new Date().toISOString().split('T')[0];
+            adminDatePicker.value = today;
+
+            listenToCollection('services');
+            listenToCollection('barbers');
+            listenToAppointmentsForDate(today);
+
+            setupForms();
+        }
+        
+        function listenToCollection(collectionName) {
+            const container = document.getElementById(`${collectionName}-list-admin`);
+            const q = collection(db, `shops/${currentShop.id}/${collectionName}`);
+            onSnapshot(q, (snapshot) => {
+                container.innerHTML = '';
+                if(snapshot.empty) {
+                    container.innerHTML = `<p class="text-sm text-gray-500">Nenhum item adicionado.</p>`;
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const item = { id: doc.id, ...doc.data() };
+                    const itemEl = document.createElement('div');
+                    itemEl.className = "flex justify-between items-center bg-gray-700 p-2 rounded";
+                    itemEl.innerHTML = `<span>${item.name}</span><button data-id="${item.id}" class="delete-btn text-red-400 hover:text-red-600 font-bold">X</button>`;
+                    container.appendChild(itemEl);
+                });
+                container.querySelectorAll('.delete-btn').forEach(button => {
+                    button.onclick = () => deleteItem(collectionName, button.dataset.id);
+                });
+            });
+        }
+
+        function listenToAppointmentsForDate(date) {
+             const container = document.getElementById('appointments-list-admin');
+             const q = query(collection(db, `shops/${currentShop.id}/appointments`), where("date", "==", date));
+             onSnapshot(q, (snapshot) => {
+                container.innerHTML = '';
+                if(snapshot.empty) {
+                    container.innerHTML = `<p class="text-sm text-gray-500">Nenhum agendamento para esta data.</p>`;
+                    return;
+                }
+                const appointments = snapshot.docs.map(doc => doc.data()).sort((a,b) => a.time.localeCompare(b.time));
+                appointments.forEach(appt => {
+                    const el = document.createElement('div');
+                    el.className = 'bg-gray-700 p-3 rounded-lg mb-2';
+                    el.innerHTML = `<div class="flex justify-between items-center"><p class="font-bold text-white">${appt.time} - ${appt.serviceName}</p><p class="text-sm text-gray-400">${appt.barberName}</p></div><p class="text-sm text-amber-400 mt-1">Cliente: ${appt.userName}</p>`;
+                    container.appendChild(el);
+                });
+             });
+        }
+        
+        async function deleteItem(collectionName, itemId) {
+            if (confirm(`Tem a certeza que quer apagar este item?`)) {
+                await deleteDoc(doc(db, `shops/${currentShop.id}/${collectionName}`, itemId));
+            }
+        }
+
+        function setupForms() {
+            const serviceForm = document.getElementById('service-form');
+            serviceForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newService = { name: serviceForm['service-name'].value, price: serviceForm['service-price'].value, duration: parseInt(serviceForm['service-duration'].value, 10), description: serviceForm['service-description'].value };
+                await addDoc(collection(db, `shops/${currentShop.id}/services`), newService);
+                serviceForm.reset();
+            });
+
+            const barberForm = document.getElementById('barber-form');
+            barberForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newBarber = { name: barberForm['barber-name'].value, specialty: barberForm['barber-specialty'].value, photo: `https://placehold.co/400x400/1f2937/a8a29e?text=${barberForm['barber-name'].value.charAt(0)}` };
+                await addDoc(collection(db, `shops/${currentShop.id}/barbers`), newBarber);
+                barberForm.reset();
+            });
+            
+             document.getElementById('admin-date-picker-dash').addEventListener('change', (e) => listenToAppointmentsForDate(e.target.value));
+        }
+
+        // --- Event Listeners ---
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('owner-email').value;
+            const password = document.getElementById('owner-password').value;
+            const messageEl = document.getElementById('form-message');
+            const loginButton = document.getElementById('login-button');
+            messageEl.textContent = '';
+            loginButton.disabled = true;
+            loginButton.innerText = 'A entrar...';
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // O onAuthStateChanged tratará do resto.
+            } catch (error) {
+                messageEl.textContent = "Email ou senha inválidos.";
+                loginButton.disabled = false;
+                loginButton.innerText = 'Entrar';
+            }
+        });
+
+        logoutButton.addEventListener('click', () => {
+            signOut(auth);
+        });
+        
+        document.getElementById('copy-link-button').addEventListener('click', () => {
+            navigator.clipboard.writeText(document.getElementById('public-link').href).then(() => {
+                const btn = document.getElementById('copy-link-button');
+                btn.textContent = 'Copiado!';
+                setTimeout(() => { btn.textContent = 'Copiar'; }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>

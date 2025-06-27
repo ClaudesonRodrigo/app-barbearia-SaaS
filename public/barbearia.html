@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barbearia - Agendamento Online</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✂️</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="font-body bg-gray-900 text-white antialiased">
+
+    <!-- Main Container -->
+    <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-5xl">
+
+        <!-- Header -->
+        <header id="header" class="text-center mb-8 md:mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold title-font text-amber-400">Carregando Barbearia...</h1>
+            <p class="text-gray-400 mt-2">Agende seu horário com os melhores profissionais.</p>
+            <div id="user-info" class="mt-4 text-sm text-gray-300 min-h-[48px] flex items-center justify-center"></div>
+        </header>
+
+        <!-- Loading View -->
+        <div id="loading-view">
+             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-gray-800 p-5 rounded-lg shadow-md"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-price"></div></div>
+                <div class="bg-gray-800 p-5 rounded-lg shadow-md"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-price"></div></div>
+                <div class="bg-gray-800 p-5 rounded-lg shadow-md"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-price"></div></div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <main id="main-content" class="hidden">
+            <div id="views-container">
+                <!-- Views de Serviços, Barbeiros e Agendamento -->
+                <div id="services-view">
+                    <h2 class="text-2xl font-bold mb-6 text-center text-amber-300">1. Escolha um Serviço</h2>
+                    <div id="services-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+                <div id="barbers-view" class="hidden">
+                    <button onclick="window.ui.showView('services-view')" class="mb-6 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">← Voltar</button>
+                    <h2 class="text-2xl font-bold mb-6 text-center text-amber-300">2. Escolha um Barbeiro</h2>
+                    <div id="barbers-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+                <div id="booking-view" class="hidden">
+                    <button onclick="window.ui.showView('barbers-view')" class="mb-6 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">← Voltar</button>
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                        <h2 class="text-2xl font-bold mb-2 text-center text-amber-300">3. Escolha um Horário</h2>
+                        <div id="booking-details" class="text-center text-gray-400 mb-6"></div>
+                        <div class="flex flex-col md:flex-row items-center justify-center gap-4 mb-4">
+                            <label for="date-picker" class="font-bold text-amber-300">Data:</label>
+                            <input type="date" id="date-picker" class="bg-gray-700 text-white p-2 rounded-lg border-2 border-gray-600 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div id="time-slots-container" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="appointments-section" class="mt-12">
+                <h2 class="text-2xl font-bold mb-6 text-center text-amber-300">Meus Agendamentos</h2>
+                <div id="my-appointments-list" class="space-y-4"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-8 max-w-lg w-full text-center">
+            <h3 id="modal-title" class="text-2xl font-bold text-amber-400 mb-4"></h3>
+            <p id="modal-message" class="text-gray-300 mb-6 text-left"></p>
+            <button onclick="window.ui.closeModal('notification-modal')" class="bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-2 px-6 rounded-lg">OK</button>
+        </div>
+    </div>
+    
+    <div id="confirmation-whatsapp-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-8 max-w-lg w-full">
+            <h3 class="text-2xl font-bold text-amber-400 mb-4">Confirme o seu Agendamento</h3>
+            <div id="confirmation-summary" class="text-left space-y-2 mb-6 p-4 bg-gray-700 rounded-lg">
+                <!-- Detalhes do agendamento serão injetados aqui -->
+            </div>
+            <div>
+                <label for="whatsapp-number" class="block text-sm font-bold text-gray-300 mb-2">Seu WhatsApp para Lembretes (ex: 5579999998888)</label>
+                <input type="tel" id="whatsapp-number" name="whatsapp-number" required class="w-full p-3 bg-gray-600 rounded-lg text-white border-2 border-gray-500 focus:outline-none focus:border-amber-500" placeholder="DDD + Número">
+                 <p id="whatsapp-error" class="text-red-400 text-sm mt-1 hidden"></p>
+            </div>
+            <div class="flex justify-end gap-4 mt-6">
+                 <button onclick="window.ui.closeModal('confirmation-whatsapp-modal')" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg">Cancelar</button>
+                 <button id="final-confirm-button" class="cta-button bg-amber-500 text-gray-900 font-bold py-2 px-6 rounded-lg">Confirmar Agendamento</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Integrado da Página do Cliente -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs, doc, getDoc, onSnapshot, addDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M",
+            authDomain: "barbeariasergipana-b32b6.firebaseapp.com",
+            projectId: "barbeariasergipana-b32b6",
+            storageBucket: "barbeariasergipana-b32b6.firebasestorage.app",
+            messagingSenderId: "562815971114",
+            appId: "1:562815971114:web:73e811a601c6b64e8ab853",
+            measurementId: "G-1M4H1Z3TV5"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let appState = { shopId: null, shopDetails: null, currentUser: null, services: [], barbers: [], selectedService: null, selectedBarber: null, selectedTime: null, appointmentsUnsubscribe: null, myAppointmentsUnsubscribe: null };
+
+        const mainContent = document.getElementById('main-content');
+        const loadingView = document.getElementById('loading-view');
+        const datePicker = document.getElementById('date-picker');
+        const headerTitle = document.querySelector('#header h1');
+        const userInfoContainer = document.getElementById('user-info');
+        const servicesList = document.getElementById('services-list');
+        const barbersList = document.getElementById('barbers-list');
+        const timeSlotsContainer = document.getElementById('time-slots-container');
+        const myAppointmentsList = document.getElementById('my-appointments-list');
+        const views = { 'services-view': document.getElementById('services-view'), 'barbers-view': document.getElementById('barbers-view'), 'booking-view': document.getElementById('booking-view') };
+
+        function showView(viewName) { Object.values(views).forEach(v => v.classList.add('hidden')); if (views[viewName]) views[viewName].classList.remove('hidden'); }
+        function showModal(title, message) { document.getElementById('modal-title').innerText = title; document.getElementById('modal-message').innerText = message; document.getElementById('notification-modal').classList.remove('hidden'); }
+        function closeModal(modalId) { document.getElementById(modalId).classList.add('hidden'); }
+        window.ui = { showView, closeModal };
+
+        async function initializeClientApp() {
+            appState.shopId = new URLSearchParams(window.location.search).get('shop');
+            if (!appState.shopId) { document.body.innerHTML = `<h1 class="text-white text-center p-10 text-2xl">Erro: Barbearia não encontrada. Verifique o link.</h1>`; return; }
+            try {
+                const shopSnap = await getDoc(doc(db, 'shops', appState.shopId));
+                if (!shopSnap.exists()) { document.body.innerHTML = `<h1 class="text-white text-center p-10 text-2xl">Erro: A barbearia com o ID '${appState.shopId}' não existe.</h1>`; return; }
+                
+                appState.shopDetails = { id: shopSnap.id, ...shopSnap.data() };
+                headerTitle.textContent = appState.shopDetails.shopName;
+                document.title = `${appState.shopDetails.shopName} - Agendamento`;
+
+                const servicesSnap = await getDocs(collection(db, `shops/${appState.shopId}/services`));
+                appState.services = servicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const barbersSnap = await getDocs(collection(db, `shops/${appState.shopId}/barbers`));
+                appState.barbers = barbersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                loadingView.style.display = 'none';
+                mainContent.classList.remove('hidden');
+                renderServices();
+                renderBarbers();
+                
+                onAuthStateChanged(auth, (user) => {
+                    appState.currentUser = user;
+                    renderUserArea(user);
+                    if (appState.myAppointmentsUnsubscribe) appState.myAppointmentsUnsubscribe();
+                    if (user) {
+                        listenToMyAppointments(user.uid);
+                    }
+                });
+            } catch (error) {
+                console.error("Erro fatal ao inicializar a aplicação:", error);
+                document.body.innerHTML = '<h1 class="text-white text-center p-10 text-2xl">Ocorreu um erro ao carregar a página.</h1>';
+            }
+        }
+        
+        function renderUserArea(user) {
+            if (user) {
+                userInfoContainer.innerHTML = `<span>Logado como: ${user.displayName || 'Cliente'}</span> <button id="client-logout-btn" class="ml-2 text-red-400 hover:underline text-xs">Sair</button>`;
+                document.getElementById('client-logout-btn').onclick = () => signOut(auth);
+            } else {
+                userInfoContainer.innerHTML = `<button id="client-login-btn" class="cta-button bg-amber-500 text-gray-900 font-bold py-2 px-4 rounded-lg">Fazer Login para Agendar</button>`;
+                document.getElementById('client-login-btn').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
+                renderMyAppointments([]);
+            }
+        }
+
+        function renderServices() {
+            servicesList.innerHTML = '';
+            appState.services.forEach(service => {
+                const el = document.createElement('div');
+                el.className = "service-card bg-gray-800 p-5 rounded-lg shadow-md cursor-pointer transition-transform duration-300 hover:bg-gray-700 hover:scale-105";
+                el.innerHTML = `<h3 class="text-xl font-bold text-amber-400">${service.name}</h3><p class="text-gray-400 text-sm mt-1">${service.description}</p><p class="text-lg font-semibold mt-3">${service.price}</p>`;
+                el.onclick = () => { appState.selectedService = service; showView('barbers-view'); };
+                servicesList.appendChild(el);
+            });
+        }
+        
+        function renderBarbers() {
+            barbersList.innerHTML = '';
+            appState.barbers.forEach(barber => {
+                const el = document.createElement('div');
+                el.className = "barber-card bg-gray-800 rounded-lg shadow-md text-center p-5 transition-transform duration-300 hover:bg-gray-700 flex flex-col items-center justify-between";
+                el.innerHTML = `
+                    <div class="cursor-pointer">
+                        <img src="${barber.photo || 'https://placehold.co/400x400'}" alt="${barber.name}" class="w-24 h-24 rounded-full mx-auto mb-4 border-2 border-amber-400">
+                        <h3 class="text-xl font-bold">${barber.name}</h3>
+                        <p class="text-amber-400 text-sm">${barber.specialty}</p>
+                    </div>
+                    <button class="gemini-btn mt-4 bg-gray-700 hover:bg-amber-600 text-white hover:text-gray-900 font-semibold py-2 px-4 rounded-lg text-xs transition-all duration-300">✨ Sugerir Estilos</button>
+                `;
+                el.querySelector('.cursor-pointer').onclick = () => handleBarberSelect(barber);
+                // A funcionalidade do Gemini pode ser adicionada aqui mais tarde
+                // el.querySelector('.gemini-btn').onclick = () => openStyleConsultant(barber);
+                barbersList.appendChild(el);
+            });
+        }
+        
+        function handleBarberSelect(barber) {
+            appState.selectedBarber = barber;
+            const today = new Date().toISOString().split('T')[0];
+            datePicker.value = today;
+            datePicker.min = today;
+            document.getElementById('booking-details').innerHTML = `Serviço: <span class="font-bold text-white">${appState.selectedService.name}</span><br>Barbeiro: <span class="font-bold text-white">${appState.selectedBarber.name}</span>`;
+            showView('booking-view');
+            listenToTimeSlots();
+        }
+
+        datePicker.addEventListener('change', () => listenToTimeSlots());
+        
+        function listenToTimeSlots() {
+            if (appState.appointmentsUnsubscribe) appState.appointmentsUnsubscribe();
+            timeSlotsContainer.innerHTML = '<div class="col-span-full text-center p-4">A carregar horários...</div>';
+            const q = query(collection(db, `shops/${appState.shopId}/appointments`), where("barberId", "==", appState.selectedBarber.id), where("date", "==", datePicker.value));
+            appState.appointmentsUnsubscribe = onSnapshot(q, (snapshot) => {
+                const bookedSlots = new Set(snapshot.docs.map(doc => doc.data().time));
+                renderTimeSlots(bookedSlots);
+            });
+        }
+        
+        function renderTimeSlots(bookedSlots) {
+            timeSlotsContainer.innerHTML = '';
+            const openingTime = 9, closingTime = 19, slotDuration = 30;
+            for (let h = openingTime; h < closingTime; h++) {
+                for (let m = 0; m < 60; m += slotDuration) {
+                    const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                    const isBooked = bookedSlots.has(time);
+                    const slotElement = document.createElement('button');
+                    slotElement.innerText = time;
+                    slotElement.className = `time-slot p-3 rounded-lg font-semibold transition-all duration-200 ${isBooked ? 'bg-red-800 text-gray-500 cursor-not-allowed' : 'bg-amber-500 hover:bg-amber-600 text-gray-900'}`;
+                    slotElement.disabled = isBooked;
+                    if (!isBooked) slotElement.onclick = () => handleTimeSelect(time);
+                    timeSlotsContainer.appendChild(slotElement);
+                }
+            }
+        }
+        
+        function handleTimeSelect(time) {
+            if (!appState.currentUser) { showModal("Login Necessário", "Por favor, faça login para poder agendar."); return; }
+            appState.selectedTime = time;
+            
+            const summaryDiv = document.getElementById('confirmation-summary');
+            summaryDiv.innerHTML = `
+                <p><span class="font-bold text-gray-300">Serviço:</span> ${appState.selectedService.name}</p>
+                <p><span class="font-bold text-gray-300">Barbeiro:</span> ${appState.selectedBarber.name}</p>
+                <p><span class="font-bold text-gray-300">Data:</span> ${new Date(datePicker.value + 'T00:00:00').toLocaleDateString('pt-BR', { dateStyle: 'long' })}</p>
+                <p><span class="font-bold text-gray-300">Horário:</span> ${time}</p>
+            `;
+            document.getElementById('confirmation-whatsapp-modal').classList.remove('hidden');
+        }
+
+        async function confirmAndSaveAppointment() {
+            const whatsappInput = document.getElementById('whatsapp-number');
+            const whatsappError = document.getElementById('whatsapp-error');
+            const whatsappNumber = whatsappInput.value.replace(/\D/g, ''); 
+
+            if (whatsappNumber.length < 10) {
+                whatsappError.textContent = 'Por favor, insira um número de WhatsApp válido com DDD.';
+                whatsappError.classList.remove('hidden');
+                return;
+            }
+            whatsappError.classList.add('hidden');
+
+            const appointmentData = { userId: appState.currentUser.uid, userName: appState.currentUser.displayName || "Cliente", userEmail: appState.currentUser.email, userWhatsapp: whatsappNumber, serviceId: appState.selectedService.id, serviceName: appState.selectedService.name, barberId: appState.selectedBarber.id, barberName: appState.selectedBarber.name, date: datePicker.value, time: appState.selectedTime, createdAt: serverTimestamp() };
+            const confirmButton = document.getElementById('final-confirm-button');
+            try {
+                confirmButton.disabled = true;
+                confirmButton.innerText = "A agendar...";
+                await addDoc(collection(db, `shops/${appState.shopId}/appointments`), appointmentData);
+                closeModal('confirmation-whatsapp-modal');
+                showModal("Sucesso!", `O seu horário para ${appointmentData.serviceName} às ${appointmentData.time} foi confirmado! Um lembrete será enviado.`);
+                showView('services-view');
+            } catch (error) { 
+                showModal("Erro", "Não foi possível realizar o agendamento."); 
+                console.error("Erro ao criar agendamento:", error); 
+            } finally {
+                 confirmButton.disabled = false;
+                 confirmButton.innerText = "Confirmar Agendamento";
+            }
+        }
+        
+        document.getElementById('final-confirm-button').onclick = confirmAndSaveAppointment;
+
+        function listenToMyAppointments(userId) {
+            const q = query(collection(db, `shops/${appState.shopId}/appointments`), where("userId", "==", userId));
+            appState.myAppointmentsUnsubscribe = onSnapshot(q, (snapshot) => renderMyAppointments(snapshot.docs.map(d => ({id: d.id, ...d.data()}))));
+        }
+
+        function renderMyAppointments(appointments) {
+            myAppointmentsList.innerHTML = '';
+            if (appointments.length === 0) { myAppointmentsList.innerHTML = '<p class="text-gray-500 text-center">Você ainda não possui agendamentos.</p>'; return; }
+            
+            appointments.sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time)).forEach(appt => {
+                const el = document.createElement('div');
+                el.className = "bg-gray-800 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-4";
+                const apptDateTime = new Date(`${appt.date}T${appt.time}`);
+                const isSoon = (apptDateTime - new Date()) / (1000 * 60 * 60) <= 24 && (apptDateTime > new Date());
+                el.innerHTML = `<div class="flex-grow"><p class="font-bold text-amber-400">${appt.serviceName}</p><p class="text-sm text-gray-400">com ${appt.barberName}</p></div><div class="flex items-center gap-4"><div class="text-center sm:text-right"><p class="font-semibold">${apptDateTime.toLocaleDateString('pt-BR', {weekday: 'long', day: '2-digit', month: 'short' })}</p><p class="text-lg font-bold">${appt.time}</p></div>${isSoon ? '<span title="Lembrete: seu agendamento é em menos de 24 horas!">🔔</span>' : ''}</div><button data-id="${appt.id}" class="cancel-btn w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Cancelar</button>`;
+                myAppointmentsList.appendChild(el);
+            });
+
+            document.querySelectorAll('.cancel-btn').forEach(btn => btn.onclick = (e) => {
+                const confirmModal = document.getElementById('confirm-modal');
+                confirmModal.classList.remove('hidden');
+                document.getElementById('confirm-cancel-btn').onclick = () => closeModal('confirm-modal');
+                document.getElementById('confirm-delete-btn').onclick = async () => {
+                    closeModal('confirm-modal');
+                    await deleteDoc(doc(db, `shops/${appState.shopId}/appointments`, e.target.dataset.id));
+                    showModal("Cancelado", "O seu agendamento foi cancelado com sucesso.");
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeClientApp);
+    </script>
+</body>
+</html>
