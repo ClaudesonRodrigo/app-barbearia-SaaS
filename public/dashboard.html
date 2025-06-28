@@ -57,9 +57,6 @@
         </header>
 
         <main id="dashboard-main" class="container mx-auto p-6">
-            <div id="support-banner" class="hidden bg-yellow-500 text-yellow-900 font-bold text-center p-2 rounded-lg mb-6">
-                <p>Você está em modo de suporte. As alterações feitas aqui afetarão a barbearia do seu cliente.</p>
-            </div>
             <div id="welcome-section" class="bg-gray-800 p-6 rounded-lg mb-8">
                 <h1 id="shop-name-title" class="text-3xl font-bold text-white">Carregando barbearia...</h1>
                 <p class="text-gray-400 mt-2">Este é o seu centro de controlo. Gira os seus serviços, barbeiros e agendamentos aqui.</p>
@@ -71,6 +68,17 @@
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-1 space-y-8">
+                    
+                    <!-- NOVA SECÇÃO: Gerir Subscrição -->
+                    <div class="bg-gray-800 p-6 rounded-lg border border-amber-400">
+                        <h2 class="text-2xl font-bold text-white mb-4">Subscrição</h2>
+                        <div class="space-y-2">
+                           <p>Status: <span id="subscription-status" class="font-bold">--</span></p>
+                           <p class="text-xs text-gray-400">Plano Profissional - R$ 49,90/mês</p>
+                        </div>
+                        <button id="manage-subscription-button" class="cta-button w-full mt-4 bg-amber-500 text-gray-900 font-bold py-2 rounded-lg hover:bg-amber-600">Gerir Pagamento</button>
+                    </div>
+
                     <div class="bg-gray-800 p-6 rounded-lg">
                         <h2 class="text-2xl font-bold text-white mb-4">Gerir Serviços</h2>
                         <form id="service-form" class="space-y-4">
@@ -111,7 +119,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const SUPER_ADMIN_UID = "ftNGvDucWfZmdsrrZ9ffpWebOUU2";
         let currentShop = null;
 
         const loader = document.getElementById('full-page-loader');
@@ -120,6 +127,8 @@
         const loginForm = document.getElementById('login-form');
         const logoutButton = document.getElementById('logout-button');
         const loginMessage = document.getElementById('form-message');
+        const subscriptionStatusEl = document.getElementById('subscription-status');
+        const manageSubscriptionButton = document.getElementById('manage-subscription-button');
 
         function showView(viewName) {
             loader.style.display = 'none';
@@ -130,54 +139,46 @@
         }
 
         onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                showView('login-container');
-                return;
-            }
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const viewShopId = urlParams.get('shop_id_view');
-            let shopData;
-
-            if (user.uid === SUPER_ADMIN_UID && viewShopId) {
-                // MODO SUPORTE: Super Admin a ver a loja de um cliente.
-                document.getElementById('support-banner').style.display = 'block';
-                const shopRef = doc(db, 'shops', viewShopId);
-                const shopSnap = await getDoc(shopRef);
-                shopData = shopSnap.exists() ? { id: shopSnap.id, ...shopSnap.data() } : null;
-            } else {
-                // MODO NORMAL: Dono da barbearia a ver a sua própria loja.
-                document.getElementById('support-banner').style.display = 'none';
+            if (user) {
                 const q = query(collection(db, 'shops'), where("ownerUid", "==", user.uid));
                 const querySnapshot = await getDocs(q);
+
                 if (!querySnapshot.empty) {
                     const shopDoc = querySnapshot.docs[0];
-                    shopData = { id: shopDoc.id, ...shopDoc.data() };
-                }
-            }
-            
-            if (shopData) {
-                currentShop = shopData;
-                // **NOVA VERIFICAÇÃO DE STATUS**
-                if (currentShop.subscriptionStatus === 'inactive' && user.uid !== SUPER_ADMIN_UID) {
-                    alert("A sua subscrição está inativa. Por favor, entre em contacto com o suporte.");
-                    signOut(auth);
-                } else {
+                    currentShop = { id: shopDoc.id, ...shopDoc.data() };
+                    
+                    if (currentShop.subscriptionStatus === 'inactive') {
+                        alert("A sua subscrição está inativa. Por favor, entre em contacto com o suporte.");
+                        signOut(auth);
+                        return;
+                    }
+                    
                     initializeDashboard(user);
                     showView('dashboard-container');
+                } else {
+                    const isNewRegistration = sessionStorage.getItem('isNewRegistration');
+                    if(isNewRegistration){
+                        sessionStorage.removeItem('isNewRegistration');
+                        setTimeout(()=> location.reload(), 2000);
+                    } else {
+                        alert("Não foi possível encontrar os dados da sua barbearia. Por favor, tente fazer login novamente.");
+                        signOut(auth);
+                    }
                 }
             } else {
-                alert("Não foi possível encontrar os dados da sua barbearia. Por favor, tente novamente.");
-                signOut(auth);
+                showView('login-container');
             }
         });
-        
+
         function initializeDashboard(user) {
             document.getElementById('user-email').textContent = user.email;
             document.getElementById('shop-name-title').textContent = currentShop.shopName;
             const publicLink = document.getElementById('public-link');
             publicLink.href = `barbearia.html?shop=${currentShop.id}`;
             publicLink.textContent = publicLink.href;
+
+            // Atualiza a secção de subscrição
+            updateSubscriptionUI();
 
             const adminDatePicker = document.getElementById('admin-date-picker-dash');
             const today = new Date().toISOString().split('T')[0];
@@ -188,6 +189,21 @@
             listenToAppointmentsForDate(today);
 
             setupForms();
+        }
+        
+        function updateSubscriptionUI() {
+            const status = currentShop.subscriptionStatus || 'trialing';
+            const statusMap = {
+                trialing: 'Em Teste Gratuito',
+                active: 'Ativa',
+                inactive: 'Inativa'
+            };
+            subscriptionStatusEl.textContent = statusMap[status];
+            if (status === 'active') {
+                manageSubscriptionButton.textContent = 'Gerir Assinatura';
+            } else {
+                manageSubscriptionButton.textContent = 'Ativar Plano Profissional';
+            }
         }
 
         function listenToCollection(collectionName) {
@@ -210,9 +226,9 @@
         }
         
         function listenToAppointmentsForDate(date) {
-            const container = document.getElementById('appointments-list-admin');
-            const q = query(collection(db, `shops/${currentShop.id}/appointments`), where("date", "==", date));
-            onSnapshot(q, (snapshot) => {
+             const container = document.getElementById('appointments-list-admin');
+             const q = query(collection(db, `shops/${currentShop.id}/appointments`), where("date", "==", date));
+             onSnapshot(q, (snapshot) => {
                 container.innerHTML = '';
                 if(snapshot.empty) { container.innerHTML = `<p class="text-sm text-gray-500">Nenhum agendamento para esta data.</p>`; return; }
                 const appointments = snapshot.docs.map(doc => doc.data()).sort((a,b) => a.time.localeCompare(b.time));
@@ -222,7 +238,7 @@
                     el.innerHTML = `<div class="flex justify-between items-center"><p class="font-bold text-white">${appt.time} - ${appt.serviceName}</p><p class="text-sm text-gray-400">${appt.barberName}</p></div><p class="text-sm text-amber-400 mt-1">Cliente: ${appt.userName}</p>`;
                     container.appendChild(el);
                 });
-            });
+             });
         }
         
         async function deleteItem(collectionName, itemId) {
@@ -264,6 +280,11 @@
         });
 
         logoutButton.addEventListener('click', () => signOut(auth));
+        
+        manageSubscriptionButton.addEventListener('click', () => {
+            // Lógica para chamar a Netlify Function será adicionada aqui
+            alert('A integração com o Mercado Pago será implementada aqui!');
+        });
         
         document.getElementById('copy-link-button').addEventListener('click', () => {
             navigator.clipboard.writeText(document.getElementById('public-link').href);
