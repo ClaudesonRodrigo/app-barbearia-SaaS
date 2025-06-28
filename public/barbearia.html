@@ -3,12 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- O título será definido dinamicamente pelo JavaScript -->
     <title>Barbearia - Agendamento Online</title>
+    
+    <!-- Favicon (Ícone da Aba) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✂️</text></svg>">
+    
+    <!-- Tailwind CSS (Framework de Estilo) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    
+    <!-- Ficheiro de Estilo Personalizado -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="font-body bg-gray-900 text-white antialiased">
@@ -16,14 +25,14 @@
     <!-- Main Container -->
     <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-5xl">
 
-        <!-- Header -->
+        <!-- Header (Será preenchido dinamicamente) -->
         <header id="header" class="text-center mb-8 md:mb-12">
             <h1 class="text-4xl md:text-5xl font-bold title-font text-amber-400">Carregando Barbearia...</h1>
             <p class="text-gray-400 mt-2">Agende seu horário com os melhores profissionais.</p>
             <div id="user-info" class="mt-4 text-sm text-gray-300 min-h-[48px] flex items-center justify-center"></div>
         </header>
 
-        <!-- Loading View -->
+        <!-- Loading View com Skeleton -->
         <div id="loading-view">
              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div class="bg-gray-800 p-5 rounded-lg shadow-md"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-price"></div></div>
@@ -32,36 +41,50 @@
             </div>
         </div>
         
-        <!-- Main Content -->
+        <!-- Main Content - Hidden by default -->
         <main id="main-content" class="hidden">
+            
+            <!-- Views Container -->
             <div id="views-container">
-                <!-- Views de Serviços, Barbeiros e Agendamento -->
+
+                <!-- Services View -->
                 <div id="services-view">
                     <h2 class="text-2xl font-bold mb-6 text-center text-amber-300">1. Escolha um Serviço</h2>
                     <div id="services-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
                 </div>
+
+                <!-- Barbers View -->
                 <div id="barbers-view" class="hidden">
-                    <button onclick="window.ui.showView('services-view')" class="mb-6 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">← Voltar</button>
+                    <button onclick="window.ui.showView('services-view')" class="mb-6 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition-all duration-300">← Voltar para Serviços</button>
                     <h2 class="text-2xl font-bold mb-6 text-center text-amber-300">2. Escolha um Barbeiro</h2>
                     <div id="barbers-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
                 </div>
+
+                <!-- Booking View -->
                 <div id="booking-view" class="hidden">
-                    <button onclick="window.ui.showView('barbers-view')" class="mb-6 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">← Voltar</button>
+                    <button onclick="window.ui.showView('barbers-view')" class="mb-6 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition-all duration-300">← Voltar para Barbeiros</button>
                     <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
                         <h2 class="text-2xl font-bold mb-2 text-center text-amber-300">3. Escolha um Horário</h2>
                         <div id="booking-details" class="text-center text-gray-400 mb-6"></div>
+                        
                         <div class="flex flex-col md:flex-row items-center justify-center gap-4 mb-4">
                             <label for="date-picker" class="font-bold text-amber-300">Data:</label>
                             <input type="date" id="date-picker" class="bg-gray-700 text-white p-2 rounded-lg border-2 border-gray-600 focus:outline-none focus:border-amber-500">
                         </div>
-                        <div id="time-slots-container" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3"></div>
+
+                        <div id="time-slots-container" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                           <div id="time-slots-loader" class="col-span-full text-center p-4">A carregar horários...</div>
+                        </div>
                     </div>
                 </div>
             </div>
+
+             <!-- My Appointments Section -->
             <div id="appointments-section" class="mt-12">
                 <h2 class="text-2xl font-bold mb-6 text-center text-amber-300">Meus Agendamentos</h2>
                 <div id="my-appointments-list" class="space-y-4"></div>
             </div>
+            
         </main>
     </div>
 
@@ -69,26 +92,33 @@
     <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4">
         <div class="bg-gray-800 rounded-lg shadow-2xl p-8 max-w-lg w-full text-center">
             <h3 id="modal-title" class="text-2xl font-bold text-amber-400 mb-4"></h3>
-            <p id="modal-message" class="text-gray-300 mb-6 text-left"></p>
-            <button onclick="window.ui.closeModal('notification-modal')" class="bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-2 px-6 rounded-lg">OK</button>
+            <p id="modal-message" class="text-gray-300 mb-6 text-left" style="white-space: pre-wrap;"></p>
+            <button onclick="window.ui.closeModal('notification-modal')" class="bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-2 px-6 rounded-lg transition-all duration-300">OK</button>
         </div>
     </div>
     
-    <div id="confirmation-whatsapp-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4">
+    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-8 max-w-sm w-full text-center">
+            <h3 id="confirm-modal-title" class="text-2xl font-bold text-red-400 mb-4">Tem certeza?</h3>
+            <p id="confirm-modal-message" class="text-gray-300 mb-6"></p>
+            <div class="flex justify-center gap-4">
+                 <button id="confirm-cancel-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300">Cancelar</button>
+                 <button id="confirm-delete-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300">Sim, apagar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gemini AI Style Suggester Modal -->
+    <div id="gemini-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4">
         <div class="bg-gray-800 rounded-lg shadow-2xl p-8 max-w-lg w-full">
-            <h3 class="text-2xl font-bold text-amber-400 mb-4">Confirme o seu Agendamento</h3>
-            <div id="confirmation-summary" class="text-left space-y-2 mb-6 p-4 bg-gray-700 rounded-lg">
-                <!-- Detalhes do agendamento serão injetados aqui -->
-            </div>
-            <div>
-                <label for="whatsapp-number" class="block text-sm font-bold text-gray-300 mb-2">Seu WhatsApp para Lembretes (ex: 5579999998888)</label>
-                <input type="tel" id="whatsapp-number" name="whatsapp-number" required class="w-full p-3 bg-gray-600 rounded-lg text-white border-2 border-gray-500 focus:outline-none focus:border-amber-500" placeholder="DDD + Número">
-                 <p id="whatsapp-error" class="text-red-400 text-sm mt-1 hidden"></p>
-            </div>
-            <div class="flex justify-end gap-4 mt-6">
-                 <button onclick="window.ui.closeModal('confirmation-whatsapp-modal')" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg">Cancelar</button>
-                 <button id="final-confirm-button" class="cta-button bg-amber-500 text-gray-900 font-bold py-2 px-6 rounded-lg">Confirmar Agendamento</button>
-            </div>
+            <h3 class="text-2xl font-bold text-amber-400 mb-4 flex items-center gap-2">✨ Consultor de Estilo AI</h3>
+            <p id="gemini-modal-intro" class="text-gray-400 mb-4"></p>
+            <textarea id="gemini-prompt-input" class="w-full bg-gray-700 p-3 rounded-lg text-white placeholder-gray-500 border-2 border-gray-600 focus:outline-none focus:border-amber-500" rows="3" placeholder="Ex: Tenho cabelo liso e fino, quero um corte profissional mas com um toque moderno."></textarea>
+            <button id="gemini-generate-btn" class="gemini-btn w-full mt-4 bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2">
+                Gerar Sugestões ✨
+            </button>
+            <div id="gemini-result" class="mt-6 p-4 bg-gray-900 rounded-lg min-h-[100px]"></div>
+             <button onclick="window.ui.closeModal('gemini-modal')" class="w-full mt-4 bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">Fechar</button>
         </div>
     </div>
 
@@ -97,7 +127,8 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, query, where, getDocs, doc, getDoc, onSnapshot, addDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
+
+        // --- Configuração ---
         const firebaseConfig = {
             apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M",
             authDomain: "barbeariasergipana-b32b6.firebaseapp.com",
@@ -111,11 +142,15 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let appState = { shopId: null, shopDetails: null, currentUser: null, services: [], barbers: [], selectedService: null, selectedBarber: null, selectedTime: null, appointmentsUnsubscribe: null, myAppointmentsUnsubscribe: null };
+        // --- Estado Global ---
+        let appState = { shopId: null, shopDetails: null, currentUser: null, services: [], barbers: [], selectedService: null, selectedBarber: null, appointmentsUnsubscribe: null, myAppointmentsUnsubscribe: null };
 
+        // --- Elementos do DOM ---
         const mainContent = document.getElementById('main-content');
         const loadingView = document.getElementById('loading-view');
         const datePicker = document.getElementById('date-picker');
+        const geminiGenerateBtn = document.getElementById('gemini-generate-btn');
+        const geminiResult = document.getElementById('gemini-result');
         const headerTitle = document.querySelector('#header h1');
         const userInfoContainer = document.getElementById('user-info');
         const servicesList = document.getElementById('services-list');
@@ -124,18 +159,24 @@
         const myAppointmentsList = document.getElementById('my-appointments-list');
         const views = { 'services-view': document.getElementById('services-view'), 'barbers-view': document.getElementById('barbers-view'), 'booking-view': document.getElementById('booking-view') };
 
+        // --- Funções da UI ---
         function showView(viewName) { Object.values(views).forEach(v => v.classList.add('hidden')); if (views[viewName]) views[viewName].classList.remove('hidden'); }
         function showModal(title, message) { document.getElementById('modal-title').innerText = title; document.getElementById('modal-message').innerText = message; document.getElementById('notification-modal').classList.remove('hidden'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.add('hidden'); }
         window.ui = { showView, closeModal };
 
+        
+        // --- Lógica Principal ---
         async function initializeClientApp() {
             appState.shopId = new URLSearchParams(window.location.search).get('shop');
             if (!appState.shopId) { document.body.innerHTML = `<h1 class="text-white text-center p-10 text-2xl">Erro: Barbearia não encontrada. Verifique o link.</h1>`; return; }
+
             try {
-                const shopSnap = await getDoc(doc(db, 'shops', appState.shopId));
+                const shopRef = doc(db, 'shops', appState.shopId);
+                const shopSnap = await getDoc(shopRef);
+
                 if (!shopSnap.exists()) { document.body.innerHTML = `<h1 class="text-white text-center p-10 text-2xl">Erro: A barbearia com o ID '${appState.shopId}' não existe.</h1>`; return; }
-                
+
                 appState.shopDetails = { id: shopSnap.id, ...shopSnap.data() };
                 headerTitle.textContent = appState.shopDetails.shopName;
                 document.title = `${appState.shopDetails.shopName} - Agendamento`;
@@ -156,12 +197,14 @@
                     renderUserArea(user);
                     if (appState.myAppointmentsUnsubscribe) appState.myAppointmentsUnsubscribe();
                     if (user) {
-                        listenToMyAppointments(user.uid);
+                        const q = query(collection(db, `shops/${appState.shopId}/appointments`), where("userId", "==", user.uid));
+                        appState.myAppointmentsUnsubscribe = onSnapshot(q, (snapshot) => renderMyAppointments(snapshot.docs.map(d => ({id: d.id, ...d.data()}))));
                     }
                 });
+
             } catch (error) {
                 console.error("Erro fatal ao inicializar a aplicação:", error);
-                document.body.innerHTML = '<h1 class="text-white text-center p-10 text-2xl">Ocorreu um erro ao carregar a página.</h1>';
+                document.body.innerHTML = '<h1 class="text-white text-center p-10 text-2xl">Ocorreu um erro ao carregar a página. Tente novamente mais tarde.</h1>';
             }
         }
         
@@ -192,32 +235,25 @@
             appState.barbers.forEach(barber => {
                 const el = document.createElement('div');
                 el.className = "barber-card bg-gray-800 rounded-lg shadow-md text-center p-5 transition-transform duration-300 hover:bg-gray-700 flex flex-col items-center justify-between";
-                el.innerHTML = `
-                    <div class="cursor-pointer">
-                        <img src="${barber.photo || 'https://placehold.co/400x400'}" alt="${barber.name}" class="w-24 h-24 rounded-full mx-auto mb-4 border-2 border-amber-400">
-                        <h3 class="text-xl font-bold">${barber.name}</h3>
-                        <p class="text-amber-400 text-sm">${barber.specialty}</p>
-                    </div>
-                    <button class="gemini-btn mt-4 bg-gray-700 hover:bg-amber-600 text-white hover:text-gray-900 font-semibold py-2 px-4 rounded-lg text-xs transition-all duration-300">✨ Sugerir Estilos</button>
-                `;
-                el.querySelector('.cursor-pointer').onclick = () => handleBarberSelect(barber);
-                // A funcionalidade do Gemini pode ser adicionada aqui mais tarde
-                // el.querySelector('.gemini-btn').onclick = () => openStyleConsultant(barber);
+                el.innerHTML = `<div class="cursor-pointer"><img src="${barber.photo}" alt="${barber.name}" class="w-24 h-24 rounded-full mx-auto mb-4 border-2 border-amber-400"><h3 class="text-xl font-bold">${barber.name}</h3><p class="text-amber-400 text-sm">${barber.specialty}</p></div><button class="gemini-btn mt-4 bg-gray-700 hover:bg-amber-600 text-white hover:text-gray-900 font-semibold py-2 px-4 rounded-lg text-xs transition-all duration-300">✨ Sugerir Estilos</button>`;
+                el.querySelector('.cursor-pointer').onclick = () => {
+                    appState.selectedBarber = barber;
+                    const today = new Date().toISOString().split('T')[0];
+                    datePicker.value = today;
+                    datePicker.min = today;
+                    document.getElementById('booking-details').innerHTML = `Serviço: <span class="font-bold text-white">${appState.selectedService.name}</span><br>Barbeiro: <span class="font-bold text-white">${appState.selectedBarber.name}</span>`;
+                    showView('booking-view');
+                    listenToTimeSlots();
+                };
+                el.querySelector('.gemini-btn').onclick = () => { 
+                    appState.selectedBarber = barber;
+                    document.getElementById('gemini-modal-intro').innerText = `Peça sugestões de estilo para ${barber.name}, especialista em ${barber.specialty}.`;
+                    geminiResult.innerHTML = '<p class="text-gray-500">As sugestões da IA aparecerão aqui...</p>';
+                    document.getElementById('gemini-modal').classList.remove('hidden');
+                };
                 barbersList.appendChild(el);
             });
         }
-        
-        function handleBarberSelect(barber) {
-            appState.selectedBarber = barber;
-            const today = new Date().toISOString().split('T')[0];
-            datePicker.value = today;
-            datePicker.min = today;
-            document.getElementById('booking-details').innerHTML = `Serviço: <span class="font-bold text-white">${appState.selectedService.name}</span><br>Barbeiro: <span class="font-bold text-white">${appState.selectedBarber.name}</span>`;
-            showView('booking-view');
-            listenToTimeSlots();
-        }
-
-        datePicker.addEventListener('change', () => listenToTimeSlots());
         
         function listenToTimeSlots() {
             if (appState.appointmentsUnsubscribe) appState.appointmentsUnsubscribe();
@@ -246,61 +282,19 @@
             }
         }
         
-        function handleTimeSelect(time) {
-            if (!appState.currentUser) { showModal("Login Necessário", "Por favor, faça login para poder agendar."); return; }
-            appState.selectedTime = time;
-            
-            const summaryDiv = document.getElementById('confirmation-summary');
-            summaryDiv.innerHTML = `
-                <p><span class="font-bold text-gray-300">Serviço:</span> ${appState.selectedService.name}</p>
-                <p><span class="font-bold text-gray-300">Barbeiro:</span> ${appState.selectedBarber.name}</p>
-                <p><span class="font-bold text-gray-300">Data:</span> ${new Date(datePicker.value + 'T00:00:00').toLocaleDateString('pt-BR', { dateStyle: 'long' })}</p>
-                <p><span class="font-bold text-gray-300">Horário:</span> ${time}</p>
-            `;
-            document.getElementById('confirmation-whatsapp-modal').classList.remove('hidden');
-        }
-
-        async function confirmAndSaveAppointment() {
-            const whatsappInput = document.getElementById('whatsapp-number');
-            const whatsappError = document.getElementById('whatsapp-error');
-            const whatsappNumber = whatsappInput.value.replace(/\D/g, ''); 
-
-            if (whatsappNumber.length < 10) {
-                whatsappError.textContent = 'Por favor, insira um número de WhatsApp válido com DDD.';
-                whatsappError.classList.remove('hidden');
-                return;
-            }
-            whatsappError.classList.add('hidden');
-
-            const appointmentData = { userId: appState.currentUser.uid, userName: appState.currentUser.displayName || "Cliente", userEmail: appState.currentUser.email, userWhatsapp: whatsappNumber, serviceId: appState.selectedService.id, serviceName: appState.selectedService.name, barberId: appState.selectedBarber.id, barberName: appState.selectedBarber.name, date: datePicker.value, time: appState.selectedTime, createdAt: serverTimestamp() };
-            const confirmButton = document.getElementById('final-confirm-button');
+        async function handleTimeSelect(time) {
+            if (!appState.currentUser) { showModal("Login Necessário", "Por favor, faça login para completar o agendamento."); return; }
+            const appointmentData = { userId: appState.currentUser.uid, userName: appState.currentUser.displayName || "Cliente", serviceId: appState.selectedService.id, serviceName: appState.selectedService.name, barberId: appState.selectedBarber.id, barberName: appState.selectedBarber.name, date: datePicker.value, time: time, createdAt: serverTimestamp() };
             try {
-                confirmButton.disabled = true;
-                confirmButton.innerText = "A agendar...";
                 await addDoc(collection(db, `shops/${appState.shopId}/appointments`), appointmentData);
-                closeModal('confirmation-whatsapp-modal');
-                showModal("Sucesso!", `O seu horário para ${appointmentData.serviceName} às ${appointmentData.time} foi confirmado! Um lembrete será enviado.`);
+                showModal("Sucesso!", `O seu horário para ${appointmentData.serviceName} com ${appointmentData.barberName} às ${time} foi confirmado.`);
                 showView('services-view');
-            } catch (error) { 
-                showModal("Erro", "Não foi possível realizar o agendamento."); 
-                console.error("Erro ao criar agendamento:", error); 
-            } finally {
-                 confirmButton.disabled = false;
-                 confirmButton.innerText = "Confirmar Agendamento";
-            }
-        }
-        
-        document.getElementById('final-confirm-button').onclick = confirmAndSaveAppointment;
-
-        function listenToMyAppointments(userId) {
-            const q = query(collection(db, `shops/${appState.shopId}/appointments`), where("userId", "==", userId));
-            appState.myAppointmentsUnsubscribe = onSnapshot(q, (snapshot) => renderMyAppointments(snapshot.docs.map(d => ({id: d.id, ...d.data()}))));
+            } catch (error) { showModal("Erro", "Não foi possível realizar o agendamento."); console.error("Erro ao criar agendamento:", error); }
         }
 
         function renderMyAppointments(appointments) {
             myAppointmentsList.innerHTML = '';
             if (appointments.length === 0) { myAppointmentsList.innerHTML = '<p class="text-gray-500 text-center">Você ainda não possui agendamentos.</p>'; return; }
-            
             appointments.sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time)).forEach(appt => {
                 const el = document.createElement('div');
                 el.className = "bg-gray-800 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-4";
@@ -309,7 +303,6 @@
                 el.innerHTML = `<div class="flex-grow"><p class="font-bold text-amber-400">${appt.serviceName}</p><p class="text-sm text-gray-400">com ${appt.barberName}</p></div><div class="flex items-center gap-4"><div class="text-center sm:text-right"><p class="font-semibold">${apptDateTime.toLocaleDateString('pt-BR', {weekday: 'long', day: '2-digit', month: 'short' })}</p><p class="text-lg font-bold">${appt.time}</p></div>${isSoon ? '<span title="Lembrete: seu agendamento é em menos de 24 horas!">🔔</span>' : ''}</div><button data-id="${appt.id}" class="cancel-btn w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Cancelar</button>`;
                 myAppointmentsList.appendChild(el);
             });
-
             document.querySelectorAll('.cancel-btn').forEach(btn => btn.onclick = (e) => {
                 const confirmModal = document.getElementById('confirm-modal');
                 confirmModal.classList.remove('hidden');
@@ -321,7 +314,42 @@
                 }
             });
         }
+        
+        // --- Event Listeners Globais ---
+        datePicker.addEventListener('change', listenToTimeSlots);
+        
+        geminiGenerateBtn.onclick = async () => {
+            const userInput = document.getElementById('gemini-prompt-input').value;
+            if (!userInput.trim()) { geminiResult.innerHTML = '<p class="text-red-500">Por favor, descreva o que você procura.</p>'; return; }
+            
+            geminiResult.innerHTML = '<div class="loader"></div>';
+            
+            try {
+                // **CORREÇÃO:** Chama a nossa função Netlify em vez da API da Gemini diretamente.
+                const response = await fetch('/.netlify/functions/get-style-suggestion', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userInput: userInput, barber: appState.selectedBarber }),
+                });
 
+                if (!response.ok) {
+                    throw new Error('Falha na resposta da função Netlify.');
+                }
+
+                const data = await response.json();
+                
+                // Formata a sugestão recebida para HTML.
+                let text = data.suggestion;
+                text = text.replace(/### (.*?)\n/g, '<h4 class="text-lg font-bold text-amber-300 mt-4 mb-1">$1</h4>').replace(/\n/g, '<br>');
+                geminiResult.innerHTML = text;
+                
+            } catch (error) { 
+                console.error("Erro ao chamar a função Netlify:", error);
+                geminiResult.innerHTML = `<p class="text-red-500">Ocorreu um erro ao buscar sugestões.</p>`;
+            }
+        };
+
+        // --- Ponto de Entrada da Aplicação ---
         document.addEventListener('DOMContentLoaded', initializeClientApp);
     </script>
 </body>
