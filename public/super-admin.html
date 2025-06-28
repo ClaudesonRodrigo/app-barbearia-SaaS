@@ -23,7 +23,7 @@
             <h1 class="font-title text-4xl font-bold text-amber-400">Acesso Restrito</h1>
             <p class="text-gray-400 mt-2 mb-6">Esta área é reservada para o administrador da plataforma.</p>
             <button id="admin-login-button" class="cta-button bg-amber-400 text-gray-900 font-bold text-lg py-3 px-8 rounded-lg">Entrar como Administrador</button>
-            <p id="login-message" class="mt-4 text-red-400"></p>
+            <p id="login-message" class="mt-4 text-red-400 font-bold"></p>
         </div>
     </div>
 
@@ -102,12 +102,23 @@
         }
 
         onAuthStateChanged(auth, (user) => {
-            if (user && user.uid === SUPER_ADMIN_UID) {
-                document.getElementById('user-email').textContent = user.email;
-                loadDashboardData();
-                showView('dashboard-container');
+            if (user) {
+                // Utilizador está logado, agora vamos verificar as permissões.
+                if (user.uid === SUPER_ADMIN_UID) {
+                    // **SUCESSO:** O utilizador é o Super Admin.
+                    document.getElementById('user-email').textContent = user.email;
+                    loadDashboardData();
+                    showView('dashboard-container');
+                } else {
+                    // **FALHA:** Logado, mas não é o Super Admin.
+                    // Mostra uma mensagem de erro clara e faz logout.
+                    loginMessage.textContent = `Acesso negado. A conta ${user.email} não tem permissão de administrador.`;
+                    signOut(auth); // Faz logout do utilizador não autorizado.
+                    showView('login-container');
+                }
             } else {
-                if (user) signOut(auth);
+                // Utilizador não está logado. Mostra a tela de login.
+                loginMessage.textContent = ''; // Limpa mensagens de erro antigas.
                 showView('login-container');
             }
         });
@@ -122,7 +133,6 @@
                 let activeShops = 0;
                 let inactiveShops = 0;
 
-                // Usamos Promise.all para aguardar que todas as contagens de agendamentos terminem
                 await Promise.all(shops.sort((a,b) => a.shopName.localeCompare(b.shopName)).map(async (shop) => {
                     const date = shop.createdAt?.toDate ? shop.createdAt.toDate().toLocaleDateString('pt-BR') : 'N/A';
                     const isInactive = shop.subscriptionStatus === 'inactive';
@@ -153,19 +163,16 @@
                     `;
                     shopsTableBody.appendChild(row);
                     
-                    // Conta os agendamentos de cada loja
                     const appointmentsRef = collection(db, `shops/${shop.id}/appointments`);
                     const appointmentsSnapshot = await getDocs(appointmentsRef);
                     totalAppointments += appointmentsSnapshot.size;
                 }));
                 
-                // Atualiza as métricas depois de todas as contagens estarem completas
                 document.getElementById('total-shops').textContent = shops.length;
                 document.getElementById('active-shops').textContent = activeShops;
                 document.getElementById('inactive-shops').textContent = inactiveShops;
                 document.getElementById('total-appointments').textContent = totalAppointments;
 
-                // Adiciona os event listeners aos novos elementos
                 document.querySelectorAll('.status-dropdown').forEach(dropdown => {
                     dropdown.onchange = (e) => updateShopStatus(e.target.dataset.shopId, e.target.value);
                 });
@@ -194,6 +201,7 @@
         adminLoginButton.addEventListener('click', async () => {
             const provider = new GoogleAuthProvider();
             try {
+                loginMessage.textContent = ''; // Limpa mensagens antigas
                 await signInWithPopup(auth, provider);
             } catch (error) {
                 loginMessage.textContent = "Falha no login. Tente novamente.";
