@@ -1,0 +1,8 @@
+{
+  "name": "agendabarber-saas-functions",
+  "version": "1.0.0",
+  "description": "Funções de backend para a plataforma AgendaBarber",
+  "dependencies": {
+    "mercadopago": "^1.5.17"
+  }
+}
