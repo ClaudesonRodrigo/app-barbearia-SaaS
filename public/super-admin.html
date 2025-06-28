@@ -17,7 +17,7 @@
         <p class="text-white text-lg">A verificar permissões...</p>
     </div>
 
-    <!-- Container do Login (Mostrado se o utilizador não for o Super Admin) -->
+    <!-- Container do Login -->
     <div id="login-container" class="min-h-screen flex-col items-center justify-center p-4 hidden">
         <div class="w-full max-w-md text-center">
             <h1 class="font-title text-4xl font-bold text-amber-400">Acesso Restrito</h1>
@@ -27,7 +27,7 @@
         </div>
     </div>
 
-    <!-- Container do Super Admin Dashboard (Mostrado se for o Super Admin) -->
+    <!-- Container do Super Admin Dashboard -->
     <div id="dashboard-container" class="hidden">
         <header class="bg-gray-800 shadow-md">
             <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -43,24 +43,11 @@
 
         <main class="container mx-auto p-6">
             <h1 class="text-3xl font-bold text-white mb-6">Visão Geral da Plataforma</h1>
-
-            <!-- Métricas Principais -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-gray-800 p-6 rounded-lg text-center">
-                    <p class="text-gray-400 text-sm">Total de Barbearias</p>
-                    <p id="total-shops" class="text-4xl font-bold text-amber-400">0</p>
-                </div>
-                 <div class="bg-gray-800 p-6 rounded-lg text-center">
-                    <p class="text-gray-400 text-sm">Total de Agendamentos</p>
-                    <p id="total-appointments" class="text-4xl font-bold text-amber-400">0</p>
-                </div>
-                 <div class="bg-gray-800 p-6 rounded-lg text-center">
-                    <p class="text-gray-400 text-sm">Novos Registos (Mês)</p>
-                    <p id="new-shops-month" class="text-4xl font-bold text-amber-400">0</p>
-                </div>
+                <div class="bg-gray-800 p-6 rounded-lg text-center"><p class="text-gray-400 text-sm">Total de Barbearias</p><p id="total-shops" class="text-4xl font-bold text-amber-400">0</p></div>
+                <div class="bg-gray-800 p-6 rounded-lg text-center"><p class="text-gray-400 text-sm">Contas Ativas</p><p id="active-shops" class="text-4xl font-bold text-green-400">0</p></div>
+                <div class="bg-gray-800 p-6 rounded-lg text-center"><p class="text-gray-400 text-sm">Contas Inativas/Trial</p><p id="inactive-shops" class="text-4xl font-bold text-yellow-400">0</p></div>
             </div>
-
-            <!-- Tabela de Barbearias -->
             <div class="bg-gray-800 p-6 rounded-lg">
                 <h2 class="text-2xl font-bold text-white mb-4">Barbearias Registadas</h2>
                 <div class="overflow-x-auto">
@@ -74,39 +61,25 @@
                                 <th class="text-left py-3 px-4">Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="shops-table-body">
-                            <!-- Linhas da tabela serão inseridas aqui -->
-                        </tbody>
+                        <tbody id="shops-table-body"></tbody>
                     </table>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Script Integrado do Super Admin -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, onSnapshot, query, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Configuração ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M",
-            authDomain: "barbeariasergipana-b32b6.firebaseapp.com",
-            projectId: "barbeariasergipana-b32b6",
-            storageBucket: "barbeariasergipana-b32b6.firebasestorage.app",
-            messagingSenderId: "562815971114",
-            appId: "1:562815971114:web:73e811a601c6b64e8ab853",
-            measurementId: "G-1M4H1Z3TV5"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", authDomain: "barbeariasergipana-b32b6.firebaseapp.com", projectId: "barbeariasergipana-b32b6", storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", messagingSenderId: "562815971114", appId: "1:562815971114:web:73e811a601c6b64e8ab853", measurementId: "G-1M4H1Z3TV5" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- Segurança: Defina o seu UID de Super Admin aqui ---
         const SUPER_ADMIN_UID = "ftNGvDucWfZmdsrrZ9ffpWebOUU2"; 
 
-        // --- Elementos do DOM ---
         const loader = document.getElementById('full-page-loader');
         const loginContainer = document.getElementById('login-container');
         const dashboardContainer = document.getElementById('dashboard-container');
@@ -115,86 +88,94 @@
         const loginMessage = document.getElementById('login-message');
         const shopsTableBody = document.getElementById('shops-table-body');
         
-        // --- Funções da UI ---
         function showView(viewName) {
             loader.style.display = 'none';
             loginContainer.style.display = 'none';
             dashboardContainer.style.display = 'none';
             document.getElementById(viewName).style.display = 'block';
-             if (viewName === 'login-container') {
-                document.getElementById(viewName).style.display = 'flex';
-            }
+            if (viewName === 'login-container') document.getElementById(viewName).style.display = 'flex';
         }
 
-        // --- Lógica Principal ---
-        onAuthStateChanged(auth, async (user) => {
+        onAuthStateChanged(auth, (user) => {
             if (user && user.uid === SUPER_ADMIN_UID) {
                 document.getElementById('user-email').textContent = user.email;
                 loadDashboardData();
                 showView('dashboard-container');
             } else {
-                if (user) {
-                    signOut(auth); 
-                }
+                if (user) signOut(auth);
                 showView('login-container');
             }
         });
         
-        async function loadDashboardData() {
+        function loadDashboardData() {
             const shopsRef = collection(db, "shops");
-            onSnapshot(shopsRef, async (shopsSnapshot) => {
-                const shops = shopsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            onSnapshot(shopsRef, (snapshot) => {
+                const shops = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
-                // Preenche a tabela
-                shopsTableBody.innerHTML = '';
-                let totalAppointments = 0;
+                document.getElementById('total-shops').textContent = shops.length;
+                document.getElementById('active-shops').textContent = shops.filter(s => s.subscriptionStatus === 'active').length;
+                document.getElementById('inactive-shops').textContent = shops.filter(s => s.subscriptionStatus !== 'active').length;
 
-                // Usamos Promise.all para aguardar que todas as contagens de agendamentos terminem
-                await Promise.all(shops.map(async (shop) => {
+                shopsTableBody.innerHTML = '';
+                shops.sort((a,b) => a.shopName.localeCompare(b.shopName)).forEach(shop => {
                     const date = shop.createdAt?.toDate ? shop.createdAt.toDate().toLocaleDateString('pt-BR') : 'N/A';
-                    
+                    const isInactive = shop.subscriptionStatus === 'inactive';
                     const row = document.createElement('tr');
-                    row.className = 'border-b border-gray-700 hover:bg-gray-700/50';
+                    row.className = `border-b border-gray-700 ${isInactive ? 'opacity-50' : ''}`;
                     row.innerHTML = `
                         <td class="py-3 px-4">${shop.shopName}</td>
                         <td class="py-3 px-4 text-gray-400">${shop.ownerEmail || 'Email não disponível'}</td>
                         <td class="py-3 px-4">
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${shop.subscriptionStatus === 'active' ? 'bg-green-500 text-green-900' : 'bg-yellow-500 text-yellow-900'}">
-                                ${shop.subscriptionStatus || 'trialing'}
-                            </span>
+                            <select data-shop-id="${shop.id}" class="status-dropdown bg-gray-600 rounded p-1 text-xs">
+                                <option value="trialing" ${shop.subscriptionStatus === 'trialing' ? 'selected' : ''}>Em Teste</option>
+                                <option value="active" ${shop.subscriptionStatus === 'active' ? 'selected' : ''}>Ativa</option>
+                                <option value="inactive" ${isInactive ? 'selected' : ''}>Inativa</option>
+                            </select>
                         </td>
                         <td class="py-3 px-4">${date}</td>
-                        <td class="py-3 px-4"><a href="barbearia.html?shop=${shop.id}" target="_blank" class="text-amber-400 hover:underline text-sm">Ver Página</a></td>
+                        <td class="py-3 px-4 flex items-center gap-4">
+                            <a href="barbearia.html?shop=${shop.id}" target="_blank" class="text-amber-400 hover:underline text-sm">Ver</a>
+                            <button data-shop-id="${shop.id}" class="delete-shop-btn text-xs font-bold py-1 px-2 rounded ${isInactive ? 'bg-red-600 text-white hover:bg-red-500' : 'bg-gray-600 text-gray-300 hover:bg-red-600 hover:text-white'}">Excluir</button>
+                        </td>
                     `;
                     shopsTableBody.appendChild(row);
-                    
-                    // Conta os agendamentos de cada loja
-                    const appointmentsRef = collection(db, `shops/${shop.id}/appointments`);
-                    const appointmentsSnapshot = await getDocs(appointmentsRef);
-                    totalAppointments += appointmentsSnapshot.size;
-                }));
-                
-                // Atualiza as métricas depois de todas as contagens estarem completas
-                document.getElementById('total-shops').textContent = shops.length;
-                document.getElementById('total-appointments').textContent = totalAppointments;
+                });
+
+                // Adiciona os event listeners aos novos elementos
+                document.querySelectorAll('.status-dropdown').forEach(dropdown => {
+                    dropdown.onchange = (e) => updateShopStatus(e.target.dataset.shopId, e.target.value);
+                });
+                document.querySelectorAll('.delete-shop-btn').forEach(button => {
+                    button.onclick = (e) => deleteShop(e.target.dataset.shopId);
+                });
             });
         }
 
-        // --- Event Listeners ---
+        async function updateShopStatus(shopId, newStatus) {
+            const shopRef = doc(db, "shops", shopId);
+            await updateDoc(shopRef, { subscriptionStatus: newStatus });
+        }
+
+        async function deleteShop(shopId) {
+            const shopNameToDelete = document.querySelector(`select[data-shop-id="${shopId}"]`).closest('tr').querySelector('td').textContent;
+            if (confirm(`Tem a certeza que quer excluir permanentemente a barbearia "${shopNameToDelete}"?\n\nEsta ação não pode ser desfeita.`)) {
+                // Em um ambiente de produção real, você também precisaria deletar o
+                // utilizador do Firebase Auth, o que requer uma função de backend segura.
+                await deleteDoc(doc(db, "shops", shopId));
+                alert("Barbearia excluída com sucesso.");
+            }
+        }
+
         adminLoginButton.addEventListener('click', async () => {
             const provider = new GoogleAuthProvider();
             try {
                 await signInWithPopup(auth, provider);
             } catch (error) {
-                console.error("Erro no login de admin:", error);
                 loginMessage.textContent = "Falha no login. Tente novamente.";
             }
         });
 
-        logoutButton.addEventListener('click', () => {
-            signOut(auth);
-        });
-
+        logoutButton.addEventListener('click', () => signOut(auth));
     </script>
 </body>
 </html>
