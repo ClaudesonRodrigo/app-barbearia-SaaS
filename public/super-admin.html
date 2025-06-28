@@ -87,7 +87,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Configuração ---
         const firebaseConfig = {
@@ -129,14 +129,11 @@
         // --- Lógica Principal ---
         onAuthStateChanged(auth, async (user) => {
             if (user && user.uid === SUPER_ADMIN_UID) {
-                // Utilizador é o Super Admin
                 document.getElementById('user-email').textContent = user.email;
                 loadDashboardData();
                 showView('dashboard-container');
             } else {
-                // Utilizador não é o Super Admin ou não está logado
                 if (user) {
-                    // Se estiver logado com uma conta não-admin, faz logout
                     signOut(auth); 
                 }
                 showView('login-container');
@@ -145,16 +142,14 @@
         
         async function loadDashboardData() {
             const shopsRef = collection(db, "shops");
-            onSnapshot(shopsRef, (snapshot) => {
-                const shops = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            onSnapshot(shopsRef, async (shopsSnapshot) => {
+                const shops = shopsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
-                // Atualiza as métricas
-                document.getElementById('total-shops').textContent = shops.length;
-                // (Lógica para outros contadores seria adicionada aqui)
-
                 // Preenche a tabela
                 shopsTableBody.innerHTML = '';
-                shops.forEach(shop => {
+                let totalAppointments = 0;
+
+                for (const shop of shops) {
                     const date = shop.createdAt?.toDate ? shop.createdAt.toDate().toLocaleDateString('pt-BR') : 'N/A';
                     const row = document.createElement('tr');
                     row.className = 'border-b border-gray-700 hover:bg-gray-700/50';
@@ -167,10 +162,20 @@
                             </span>
                         </td>
                         <td class="py-3 px-4">${date}</td>
-                        <td class="py-3 px-4"><button class="text-amber-400 hover:underline text-sm">Gerir</button></td>
+                        <td class="py-3 px-4"><a href="dashboard.html?shop_id_view=${shop.id}" class="text-amber-400 hover:underline text-sm">Gerir</a></td>
                     `;
                     shopsTableBody.appendChild(row);
-                });
+                    
+                    // Conta os agendamentos de cada loja
+                    const appointmentsRef = collection(db, `shops/${shop.id}/appointments`);
+                    const appointmentsSnapshot = await getDocs(appointmentsRef);
+                    totalAppointments += appointmentsSnapshot.size;
+                }
+                
+                 // Atualiza as métricas
+                document.getElementById('total-shops').textContent = shops.length;
+                document.getElementById('total-appointments').textContent = totalAppointments;
+
             });
         }
 
@@ -179,7 +184,6 @@
             const provider = new GoogleAuthProvider();
             try {
                 await signInWithPopup(auth, provider);
-                // O onAuthStateChanged tratará do resto
             } catch (error) {
                 console.error("Erro no login de admin:", error);
                 loginMessage.textContent = "Falha no login. Tente novamente.";
