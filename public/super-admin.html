@@ -103,22 +103,17 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Utilizador está logado, agora vamos verificar as permissões.
                 if (user.uid === SUPER_ADMIN_UID) {
-                    // **SUCESSO:** O utilizador é o Super Admin.
                     document.getElementById('user-email').textContent = user.email;
                     loadDashboardData();
                     showView('dashboard-container');
                 } else {
-                    // **FALHA:** Logado, mas não é o Super Admin.
-                    // Mostra uma mensagem de erro clara e faz logout.
                     loginMessage.textContent = `Acesso negado. A conta ${user.email} não tem permissão de administrador.`;
-                    signOut(auth); // Faz logout do utilizador não autorizado.
+                    signOut(auth);
                     showView('login-container');
                 }
             } else {
-                // Utilizador não está logado. Mostra a tela de login.
-                loginMessage.textContent = ''; // Limpa mensagens de erro antigas.
+                loginMessage.textContent = '';
                 showView('login-container');
             }
         });
@@ -201,7 +196,7 @@
         adminLoginButton.addEventListener('click', async () => {
             const provider = new GoogleAuthProvider();
             try {
-                loginMessage.textContent = ''; // Limpa mensagens antigas
+                loginMessage.textContent = '';
                 await signInWithPopup(auth, provider);
             } catch (error) {
                 loginMessage.textContent = "Falha no login. Tente novamente.";
