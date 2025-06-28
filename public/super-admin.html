@@ -87,7 +87,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, onSnapshot, query, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Configuração ---
         const firebaseConfig = {
@@ -149,8 +149,10 @@
                 shopsTableBody.innerHTML = '';
                 let totalAppointments = 0;
 
-                for (const shop of shops) {
+                // Usamos Promise.all para aguardar que todas as contagens de agendamentos terminem
+                await Promise.all(shops.map(async (shop) => {
                     const date = shop.createdAt?.toDate ? shop.createdAt.toDate().toLocaleDateString('pt-BR') : 'N/A';
+                    
                     const row = document.createElement('tr');
                     row.className = 'border-b border-gray-700 hover:bg-gray-700/50';
                     row.innerHTML = `
@@ -162,7 +164,7 @@
                             </span>
                         </td>
                         <td class="py-3 px-4">${date}</td>
-                        <td class="py-3 px-4"><a href="dashboard.html?shop_id_view=${shop.id}" class="text-amber-400 hover:underline text-sm">Gerir</a></td>
+                        <td class="py-3 px-4"><a href="barbearia.html?shop=${shop.id}" target="_blank" class="text-amber-400 hover:underline text-sm">Ver Página</a></td>
                     `;
                     shopsTableBody.appendChild(row);
                     
@@ -170,12 +172,11 @@
                     const appointmentsRef = collection(db, `shops/${shop.id}/appointments`);
                     const appointmentsSnapshot = await getDocs(appointmentsRef);
                     totalAppointments += appointmentsSnapshot.size;
-                }
+                }));
                 
-                 // Atualiza as métricas
+                // Atualiza as métricas depois de todas as contagens estarem completas
                 document.getElementById('total-shops').textContent = shops.length;
                 document.getElementById('total-appointments').textContent = totalAppointments;
-
             });
         }
 
