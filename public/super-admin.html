@@ -17,7 +17,7 @@
         <p class="text-white text-lg">A verificar permissões...</p>
     </div>
 
-    <!-- Container do Login -->
+    <!-- Container do Login (Mostrado se o utilizador não for o Super Admin) -->
     <div id="login-container" class="min-h-screen flex-col items-center justify-center p-4 hidden">
         <div class="w-full max-w-md text-center">
             <h1 class="font-title text-4xl font-bold text-amber-400">Acesso Restrito</h1>
@@ -27,7 +27,7 @@
         </div>
     </div>
 
-    <!-- Container do Super Admin Dashboard -->
+    <!-- Container do Super Admin Dashboard (Mostrado se for o Super Admin) -->
     <div id="dashboard-container" class="hidden">
         <header class="bg-gray-800 shadow-md">
             <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -43,11 +43,16 @@
 
         <main class="container mx-auto p-6">
             <h1 class="text-3xl font-bold text-white mb-6">Visão Geral da Plataforma</h1>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+            <!-- Métricas Principais -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div class="bg-gray-800 p-6 rounded-lg text-center"><p class="text-gray-400 text-sm">Total de Barbearias</p><p id="total-shops" class="text-4xl font-bold text-amber-400">0</p></div>
                 <div class="bg-gray-800 p-6 rounded-lg text-center"><p class="text-gray-400 text-sm">Contas Ativas</p><p id="active-shops" class="text-4xl font-bold text-green-400">0</p></div>
                 <div class="bg-gray-800 p-6 rounded-lg text-center"><p class="text-gray-400 text-sm">Contas Inativas/Trial</p><p id="inactive-shops" class="text-4xl font-bold text-yellow-400">0</p></div>
+                <div class="bg-gray-800 p-6 rounded-lg text-center"><p class="text-gray-400 text-sm">Total de Agendamentos</p><p id="total-appointments" class="text-4xl font-bold text-blue-400">0</p></div>
             </div>
+
+            <!-- Tabela de Barbearias -->
             <div class="bg-gray-800 p-6 rounded-lg">
                 <h2 class="text-2xl font-bold text-white mb-4">Barbearias Registadas</h2>
                 <div class="overflow-x-auto">
@@ -71,7 +76,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, onSnapshot, doc, updateDoc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", authDomain: "barbeariasergipana-b32b6.firebaseapp.com", projectId: "barbeariasergipana-b32b6", storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", messagingSenderId: "562815971114", appId: "1:562815971114:web:73e811a601c6b64e8ab853", measurementId: "G-1M4H1Z3TV5" };
         const app = initializeApp(firebaseConfig);
@@ -109,17 +114,25 @@
         
         function loadDashboardData() {
             const shopsRef = collection(db, "shops");
-            onSnapshot(shopsRef, (snapshot) => {
-                const shops = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            onSnapshot(shopsRef, async (shopsSnapshot) => {
+                const shops = shopsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
-                document.getElementById('total-shops').textContent = shops.length;
-                document.getElementById('active-shops').textContent = shops.filter(s => s.subscriptionStatus === 'active').length;
-                document.getElementById('inactive-shops').textContent = shops.filter(s => s.subscriptionStatus !== 'active').length;
-
                 shopsTableBody.innerHTML = '';
-                shops.sort((a,b) => a.shopName.localeCompare(b.shopName)).forEach(shop => {
+                let totalAppointments = 0;
+                let activeShops = 0;
+                let inactiveShops = 0;
+
+                // Usamos Promise.all para aguardar que todas as contagens de agendamentos terminem
+                await Promise.all(shops.sort((a,b) => a.shopName.localeCompare(b.shopName)).map(async (shop) => {
                     const date = shop.createdAt?.toDate ? shop.createdAt.toDate().toLocaleDateString('pt-BR') : 'N/A';
                     const isInactive = shop.subscriptionStatus === 'inactive';
+                    
+                    if (shop.subscriptionStatus === 'active') {
+                        activeShops++;
+                    } else {
+                        inactiveShops++;
+                    }
+
                     const row = document.createElement('tr');
                     row.className = `border-b border-gray-700 ${isInactive ? 'opacity-50' : ''}`;
                     row.innerHTML = `
@@ -134,12 +147,23 @@
                         </td>
                         <td class="py-3 px-4">${date}</td>
                         <td class="py-3 px-4 flex items-center gap-4">
-                            <a href="barbearia.html?shop=${shop.id}" target="_blank" class="text-amber-400 hover:underline text-sm">Ver</a>
+                            <a href="barbearia.html?shop=${shop.id}" target="_blank" class="text-amber-400 hover:underline text-sm">Ver Página</a>
                             <button data-shop-id="${shop.id}" class="delete-shop-btn text-xs font-bold py-1 px-2 rounded ${isInactive ? 'bg-red-600 text-white hover:bg-red-500' : 'bg-gray-600 text-gray-300 hover:bg-red-600 hover:text-white'}">Excluir</button>
                         </td>
                     `;
                     shopsTableBody.appendChild(row);
-                });
+                    
+                    // Conta os agendamentos de cada loja
+                    const appointmentsRef = collection(db, `shops/${shop.id}/appointments`);
+                    const appointmentsSnapshot = await getDocs(appointmentsRef);
+                    totalAppointments += appointmentsSnapshot.size;
+                }));
+                
+                // Atualiza as métricas depois de todas as contagens estarem completas
+                document.getElementById('total-shops').textContent = shops.length;
+                document.getElementById('active-shops').textContent = activeShops;
+                document.getElementById('inactive-shops').textContent = inactiveShops;
+                document.getElementById('total-appointments').textContent = totalAppointments;
 
                 // Adiciona os event listeners aos novos elementos
                 document.querySelectorAll('.status-dropdown').forEach(dropdown => {
@@ -157,10 +181,11 @@
         }
 
         async function deleteShop(shopId) {
-            const shopNameToDelete = document.querySelector(`select[data-shop-id="${shopId}"]`).closest('tr').querySelector('td').textContent;
-            if (confirm(`Tem a certeza que quer excluir permanentemente a barbearia "${shopNameToDelete}"?\n\nEsta ação não pode ser desfeita.`)) {
-                // Em um ambiente de produção real, você também precisaria deletar o
-                // utilizador do Firebase Auth, o que requer uma função de backend segura.
+            const shopRow = document.querySelector(`button[data-shop-id="${shopId}"]`).closest('tr');
+            if(!shopRow) return;
+            const shopName = shopRow.querySelector('td').textContent;
+
+            if (confirm(`Tem a certeza que quer excluir permanentemente a barbearia "${shopName}"?\n\nEsta ação não pode ser desfeita.`)) {
                 await deleteDoc(doc(db, "shops", shopId));
                 alert("Barbearia excluída com sucesso.");
             }
