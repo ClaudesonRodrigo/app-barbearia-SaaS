@@ -20,19 +20,34 @@
     <!-- Container do Login (Mostrado se o utilizador não estiver autenticado) -->
     <div id="login-container" class="min-h-screen flex-col items-center justify-center p-4 hidden">
         <div class="w-full max-w-md text-center">
-            <h1 class="font-title text-4xl font-bold text-amber-400">Acesso Restrito</h1>
-            <p class="text-gray-400 mt-2 mb-6">Esta área é reservada para o administrador da plataforma.</p>
-            <button id="admin-login-button" class="cta-button bg-amber-400 text-gray-900 font-bold text-lg py-3 px-8 rounded-lg">Entrar como Administrador</button>
-            <p id="login-message" class="mt-4 text-red-400"></p>
+            <h1 class="font-title text-4xl font-bold text-amber-400">Acesso ao Painel</h1>
+            <p class="text-gray-400 mt-2 mb-6">Entre com os dados da sua barbearia.</p>
+            <main class="bg-gray-800 p-8 rounded-lg shadow-2xl">
+                <form id="login-form" class="space-y-6">
+                    <div>
+                        <label for="owner-email" class="block text-sm font-bold text-gray-300 mb-2">Seu Email</label>
+                        <input type="email" id="owner-email" name="owner-email" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
+                    </div>
+                    <div>
+                        <label for="owner-password" class="block text-sm font-bold text-gray-300 mb-2">Sua Senha</label>
+                        <input type="password" id="owner-password" name="owner-password" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
+                    </div>
+                    <button type="submit" id="login-button" class="cta-button w-full bg-amber-500 text-gray-900 font-bold text-lg py-3 px-8 rounded-lg">Entrar</button>
+                </form>
+                <div id="form-message" class="mt-4 text-center text-red-400 font-bold"></div>
+            </main>
+            <footer class="text-center mt-6">
+                <p class="text-sm text-gray-500">Não tem uma conta? <a href="register.html" class="font-bold text-amber-400 hover:underline">Crie uma agora</a></p>
+            </footer>
         </div>
     </div>
-
-    <!-- Container do Super Admin Dashboard (Mostrado se for o Super Admin) -->
+    
+    <!-- Container do Dashboard (Mostrado se o utilizador estiver autenticado) -->
     <div id="dashboard-container" class="hidden">
-        <header class="bg-gray-800 shadow-md">
+        <header id="dashboard-header" class="bg-gray-800 shadow-md">
             <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
                 <div class="font-title text-2xl font-bold text-white">
-                    Super Admin<span class="text-amber-400">Panel</span>
+                    Agenda<span class="text-amber-400">Barber</span>
                 </div>
                 <div>
                     <span id="user-email" class="text-sm text-gray-400 mr-4"></span>
@@ -41,182 +56,218 @@
             </nav>
         </header>
 
-        <main class="container mx-auto p-6">
-            <h1 class="text-3xl font-bold text-white mb-6">Visão Geral da Plataforma</h1>
-
-            <!-- Métricas Principais -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-gray-800 p-6 rounded-lg text-center">
-                    <p class="text-gray-400 text-sm">Total de Barbearias</p>
-                    <p id="total-shops" class="text-4xl font-bold text-amber-400">0</p>
-                </div>
-                 <div class="bg-gray-800 p-6 rounded-lg text-center">
-                    <p class="text-gray-400 text-sm">Total de Agendamentos</p>
-                    <p id="total-appointments" class="text-4xl font-bold text-amber-400">0</p>
-                </div>
-                 <div class="bg-gray-800 p-6 rounded-lg text-center">
-                    <p class="text-gray-400 text-sm">Novos Registos (Mês)</p>
-                    <p id="new-shops-month" class="text-4xl font-bold text-amber-400">0</p>
+        <main id="dashboard-main" class="container mx-auto p-6">
+            <div id="support-banner" class="hidden bg-yellow-500 text-yellow-900 font-bold text-center p-2 rounded-lg mb-6">
+                <p>Você está em modo de suporte. As alterações feitas aqui afetarão a barbearia do seu cliente.</p>
+            </div>
+            <div id="welcome-section" class="bg-gray-800 p-6 rounded-lg mb-8">
+                <h1 id="shop-name-title" class="text-3xl font-bold text-white">Carregando barbearia...</h1>
+                <p class="text-gray-400 mt-2">Este é o seu centro de controlo. Gira os seus serviços, barbeiros e agendamentos aqui.</p>
+                <div class="mt-4 bg-gray-700 p-4 rounded-lg">
+                    <p class="text-sm font-bold text-amber-300">Link da sua página de agendamento:</p>
+                    <a id="public-link" href="#" target="_blank" class="text-amber-400 hover:underline break-all">A gerar link...</a>
+                    <button id="copy-link-button" class="ml-2 bg-gray-600 text-white px-3 py-1 text-xs font-bold rounded hover:bg-gray-500">Copiar</button>
                 </div>
             </div>
-
-            <!-- Tabela de Barbearias -->
-            <div class="bg-gray-800 p-6 rounded-lg">
-                <h2 class="text-2xl font-bold text-white mb-4">Barbearias Registadas</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                        <thead class="bg-gray-700">
-                            <tr>
-                                <th class="text-left py-3 px-4">Nome da Barbearia</th>
-                                <th class="text-left py-3 px-4">Email do Dono</th>
-                                <th class="text-left py-3 px-4">Status</th>
-                                <th class="text-left py-3 px-4">Data de Registo</th>
-                                <th class="text-left py-3 px-4">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="shops-table-body">
-                            <!-- Linhas da tabela serão inseridas aqui -->
-                        </tbody>
-                    </table>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 space-y-8">
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <h2 class="text-2xl font-bold text-white mb-4">Gerir Serviços</h2>
+                        <form id="service-form" class="space-y-4">
+                            <input type="text" id="service-name" placeholder="Nome do Serviço" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <input type="text" id="service-price" placeholder="Preço (ex: R$ 40,00)" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <input type="number" id="service-duration" placeholder="Duração (em minutos)" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <textarea id="service-description" placeholder="Breve descrição do serviço" class="w-full p-3 bg-gray-700 rounded-lg" rows="2" required></textarea>
+                            <button type="submit" class="w-full bg-amber-500 text-gray-900 font-bold py-2 rounded-lg hover:bg-amber-600">Adicionar Serviço</button>
+                        </form>
+                        <div id="services-list-admin" class="mt-6 space-y-2"></div>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <h2 class="text-2xl font-bold text-white mb-4">Gerir Barbeiros</h2>
+                        <form id="barber-form" class="space-y-4">
+                            <input type="text" id="barber-name" placeholder="Nome do Barbeiro" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <input type="text" id="barber-specialty" placeholder="Especialidade" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <button type="submit" class="w-full bg-amber-500 text-gray-900 font-bold py-2 rounded-lg hover:bg-amber-600">Adicionar Barbeiro</button>
+                        </form>
+                        <div id="barbers-list-admin" class="mt-6 space-y-2"></div>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 bg-gray-800 p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold text-white mb-4">Agenda do Dia</h2>
+                    <input type="date" id="admin-date-picker-dash" class="w-full p-3 bg-gray-700 rounded-lg mb-6">
+                    <div id="appointments-list-admin"></div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Modal para Notificações -->
-    <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-gray-800 rounded-lg shadow-2xl p-8 max-w-lg w-full text-center">
-            <h3 id="modal-title" class="text-2xl font-bold text-amber-400 mb-4"></h3>
-            <p id="modal-message" class="text-gray-300 mb-6 text-left" style="white-space: pre-wrap;"></p>
-            <button onclick="document.getElementById('notification-modal').classList.add('hidden')" class="bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-2 px-6 rounded-lg transition-all duration-300">OK</button>
-        </div>
-    </div>
-
-
-    <!-- Script Integrado do Super Admin -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Configuração ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M",
-            authDomain: "barbeariasergipana-b32b6.firebaseapp.com",
-            projectId: "barbeariasergipana-b32b6",
-            storageBucket: "barbeariasergipana-b32b6.firebasestorage.app",
-            messagingSenderId: "562815971114",
-            appId: "1:562815971114:web:73e811a601c6b64e8ab853",
-            measurementId: "G-1M4H1Z3TV5"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", authDomain: "barbeariasergipana-b32b6.firebaseapp.com", projectId: "barbeariasergipana-b32b6", storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", messagingSenderId: "562815971114", appId: "1:562815971114:web:73e811a601c6b64e8ab853", measurementId: "G-1M4H1Z3TV5" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- Segurança: Defina o seu UID de Super Admin aqui ---
-        const SUPER_ADMIN_UID = "ftNGvDucWfZmdsrrZ9ffpWebOUU2"; 
+        const SUPER_ADMIN_UID = "ftNGvDucWfZmdsrrZ9ffpWebOUU2";
+        let currentShop = null;
 
-        // --- Elementos do DOM ---
         const loader = document.getElementById('full-page-loader');
         const loginContainer = document.getElementById('login-container');
         const dashboardContainer = document.getElementById('dashboard-container');
-        const adminLoginButton = document.getElementById('admin-login-button');
+        const loginForm = document.getElementById('login-form');
         const logoutButton = document.getElementById('logout-button');
-        const loginMessage = document.getElementById('login-message');
-        const shopsTableBody = document.getElementById('shops-table-body');
-        
-        // --- Funções da UI ---
+        const loginMessage = document.getElementById('form-message');
+
         function showView(viewName) {
             loader.style.display = 'none';
             loginContainer.style.display = 'none';
             dashboardContainer.style.display = 'none';
             document.getElementById(viewName).style.display = 'block';
-             if (viewName === 'login-container') {
-                document.getElementById(viewName).style.display = 'flex';
-            }
+            if (viewName === 'login-container') document.getElementById(viewName).style.display = 'flex';
         }
 
-        function showModal(title, message) {
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-message').innerText = message;
-            document.getElementById('notification-modal').classList.remove('hidden');
-        }
-
-        // --- Lógica Principal ---
         onAuthStateChanged(auth, async (user) => {
-            if (user && user.uid === SUPER_ADMIN_UID) {
-                document.getElementById('user-email').textContent = user.email;
-                loadDashboardData();
-                showView('dashboard-container');
-            } else {
-                if (user) {
-                    signOut(auth); 
-                }
+            if (!user) {
                 showView('login-container');
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const viewShopId = urlParams.get('shop_id_view');
+            let shopData;
+
+            if (user.uid === SUPER_ADMIN_UID && viewShopId) {
+                // MODO SUPORTE: Super Admin a ver a loja de um cliente.
+                document.getElementById('support-banner').style.display = 'block';
+                const shopRef = doc(db, 'shops', viewShopId);
+                const shopSnap = await getDoc(shopRef);
+                shopData = shopSnap.exists() ? { id: shopSnap.id, ...shopSnap.data() } : null;
+            } else {
+                // MODO NORMAL: Dono da barbearia a ver a sua própria loja.
+                document.getElementById('support-banner').style.display = 'none';
+                const q = query(collection(db, 'shops'), where("ownerUid", "==", user.uid));
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    const shopDoc = querySnapshot.docs[0];
+                    shopData = { id: shopDoc.id, ...shopDoc.data() };
+                }
+            }
+            
+            if (shopData) {
+                currentShop = shopData;
+                // **NOVA VERIFICAÇÃO DE STATUS**
+                if (currentShop.subscriptionStatus === 'inactive' && user.uid !== SUPER_ADMIN_UID) {
+                    alert("A sua subscrição está inativa. Por favor, entre em contacto com o suporte.");
+                    signOut(auth);
+                } else {
+                    initializeDashboard(user);
+                    showView('dashboard-container');
+                }
+            } else {
+                alert("Não foi possível encontrar os dados da sua barbearia. Por favor, tente novamente.");
+                signOut(auth);
             }
         });
         
-        async function loadDashboardData() {
-            const shopsRef = collection(db, "shops");
-            onSnapshot(shopsRef, async (shopsSnapshot) => {
-                const shops = shopsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                
-                // Atualiza as métricas
-                document.getElementById('total-shops').textContent = shops.length;
-                // (Lógica para outros contadores seria adicionada aqui)
+        function initializeDashboard(user) {
+            document.getElementById('user-email').textContent = user.email;
+            document.getElementById('shop-name-title').textContent = currentShop.shopName;
+            const publicLink = document.getElementById('public-link');
+            publicLink.href = `barbearia.html?shop=${currentShop.id}`;
+            publicLink.textContent = publicLink.href;
 
-                // Preenche a tabela
-                shopsTableBody.innerHTML = '';
-                let totalAppointments = 0;
+            const adminDatePicker = document.getElementById('admin-date-picker-dash');
+            const today = new Date().toISOString().split('T')[0];
+            adminDatePicker.value = today;
 
-                for (const shop of shops) {
-                    const date = shop.createdAt?.toDate ? shop.createdAt.toDate().toLocaleDateString('pt-BR') : 'N/A';
-                    const row = document.createElement('tr');
-                    row.className = 'border-b border-gray-700 hover:bg-gray-700/50';
-                    row.innerHTML = `
-                        <td class="py-3 px-4">${shop.shopName}</td>
-                        <td class="py-3 px-4 text-gray-400">${shop.ownerEmail || 'Email não disponível'}</td>
-                        <td class="py-3 px-4">
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${shop.subscriptionStatus === 'active' ? 'bg-green-500 text-green-900' : 'bg-yellow-500 text-yellow-900'}">
-                                ${shop.subscriptionStatus || 'trialing'}
-                            </span>
-                        </td>
-                        <td class="py-3 px-4">${date}</td>
-                        <td class="py-3 px-4"><a href="barbearia.html?shop=${shop.id}" target="_blank" class="text-amber-400 hover:underline text-sm">Gerir</a></td>
-                    `;
-                    shopsTableBody.appendChild(row);
-                    
-                    // Conta os agendamentos de cada loja
-                    const appointmentsRef = collection(db, `shops/${shop.id}/appointments`);
-                    const appointmentsSnapshot = await getDocs(appointmentsRef);
-                    totalAppointments += appointmentsSnapshot.size;
-                }
-                 document.getElementById('total-appointments').textContent = totalAppointments;
-            });
+            listenToCollection('services');
+            listenToCollection('barbers');
+            listenToAppointmentsForDate(today);
+
+            setupForms();
         }
 
-        // --- Event Listeners ---
-        adminLoginButton.addEventListener('click', async () => {
-            const provider = new GoogleAuthProvider();
+        function listenToCollection(collectionName) {
+            const container = document.getElementById(`${collectionName}-list-admin`);
+            const q = collection(db, `shops/${currentShop.id}/${collectionName}`);
+            onSnapshot(q, (snapshot) => {
+                container.innerHTML = '';
+                if(snapshot.empty) { container.innerHTML = `<p class="text-sm text-gray-500">Nenhum item adicionado.</p>`; return; }
+                snapshot.forEach(doc => {
+                    const item = { id: doc.id, ...doc.data() };
+                    const itemEl = document.createElement('div');
+                    itemEl.className = "flex justify-between items-center bg-gray-700 p-2 rounded";
+                    itemEl.innerHTML = `<span>${item.name}</span><button data-id="${item.id}" class="delete-btn text-red-400 hover:text-red-600 font-bold">X</button>`;
+                    container.appendChild(itemEl);
+                });
+                container.querySelectorAll('.delete-btn').forEach(button => {
+                    button.onclick = () => deleteItem(collectionName, button.dataset.id);
+                });
+            });
+        }
+        
+        function listenToAppointmentsForDate(date) {
+            const container = document.getElementById('appointments-list-admin');
+            const q = query(collection(db, `shops/${currentShop.id}/appointments`), where("date", "==", date));
+            onSnapshot(q, (snapshot) => {
+                container.innerHTML = '';
+                if(snapshot.empty) { container.innerHTML = `<p class="text-sm text-gray-500">Nenhum agendamento para esta data.</p>`; return; }
+                const appointments = snapshot.docs.map(doc => doc.data()).sort((a,b) => a.time.localeCompare(b.time));
+                appointments.forEach(appt => {
+                    const el = document.createElement('div');
+                    el.className = 'bg-gray-700 p-3 rounded-lg mb-2';
+                    el.innerHTML = `<div class="flex justify-between items-center"><p class="font-bold text-white">${appt.time} - ${appt.serviceName}</p><p class="text-sm text-gray-400">${appt.barberName}</p></div><p class="text-sm text-amber-400 mt-1">Cliente: ${appt.userName}</p>`;
+                    container.appendChild(el);
+                });
+            });
+        }
+        
+        async function deleteItem(collectionName, itemId) {
+            if (confirm(`Tem a certeza que quer apagar este item?`)) {
+                await deleteDoc(doc(db, `shops/${currentShop.id}/${collectionName}`, itemId));
+            }
+        }
+
+        function setupForms() {
+            const serviceForm = document.getElementById('service-form');
+            serviceForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newService = { name: serviceForm['service-name'].value, price: serviceForm['service-price'].value, duration: parseInt(serviceForm['service-duration'].value, 10), description: serviceForm['service-description'].value };
+                await addDoc(collection(db, `shops/${currentShop.id}/services`), newService);
+                serviceForm.reset();
+            });
+
+            const barberForm = document.getElementById('barber-form');
+            barberForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newBarber = { name: barberForm['barber-name'].value, specialty: barberForm['barber-specialty'].value, photo: `https://placehold.co/400x400/1f2937/a8a29e?text=${barberForm['barber-name'].value.charAt(0)}` };
+                await addDoc(collection(db, `shops/${currentShop.id}/barbers`), newBarber);
+                barberForm.reset();
+            });
+            
+             document.getElementById('admin-date-picker-dash').addEventListener('change', (e) => listenToAppointmentsForDate(e.target.value));
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('owner-email').value;
+            const password = document.getElementById('owner-password').value;
+            loginMessage.textContent = '';
             try {
-                await signInWithPopup(auth, provider);
+                await signInWithEmailAndPassword(auth, email, password);
             } catch (error) {
-                console.error("Erro no login de admin:", error);
-                // **CORREÇÃO:** Verifica o código de erro e mostra uma mensagem detalhada.
-                if (error.code === 'auth/unauthorized-domain') {
-                    const origin = window.location.origin;
-                    const detailedMessage = `O seu domínio atual (${origin}) não está autorizado para fazer login.\n\n**AÇÃO NECESSÁRIA:**\n1. Copie este domínio: ${origin}\n2. Vá à sua Consola Google Cloud e adicione-o à lista de "Origens JavaScript autorizadas" nos seus DOIS clientes OAuth.`;
-                    showModal("Domínio Não Autorizado", detailedMessage);
-                } else {
-                    loginMessage.textContent = "Falha no login. Tente novamente.";
-                }
+                loginMessage.textContent = "Email ou senha inválidos.";
             }
         });
 
-        logoutButton.addEventListener('click', () => {
-            signOut(auth);
+        logoutButton.addEventListener('click', () => signOut(auth));
+        
+        document.getElementById('copy-link-button').addEventListener('click', () => {
+            navigator.clipboard.writeText(document.getElementById('public-link').href);
         });
-
     </script>
 </body>
 </html>
