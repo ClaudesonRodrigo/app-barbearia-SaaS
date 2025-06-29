@@ -4,6 +4,7 @@
   "description": "Funções de backend para a plataforma AgendaBarber",
   "dependencies": {
     "firebase-admin": "^11.11.1",
-    "mercadopago": "^1.5.17"
+    "mercadopago": "^1.5.17",
+    "twilio": "^4.20.0"
   }
 }
