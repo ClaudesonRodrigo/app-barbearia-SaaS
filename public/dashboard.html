@@ -17,7 +17,7 @@
         <p class="text-white text-lg">A verificar sessão...</p>
     </div>
 
-    <!-- Container do Login -->
+    <!-- Container do Login (Mostrado se o utilizador não estiver autenticado) -->
     <div id="login-container" class="min-h-screen flex-col items-center justify-center p-4 hidden">
         <div class="w-full max-w-md text-center">
             <h1 class="font-title text-4xl font-bold text-amber-400">Acesso ao Painel</h1>
@@ -42,7 +42,7 @@
         </div>
     </div>
     
-    <!-- Container do Dashboard -->
+    <!-- Container do Dashboard (Mostrado se o utilizador estiver autenticado) -->
     <div id="dashboard-container" class="hidden">
         <header id="dashboard-header" class="bg-gray-800 shadow-md">
             <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -57,20 +57,19 @@
         </header>
 
         <main id="dashboard-main" class="container mx-auto p-6">
-            <div id="support-banner" class="hidden bg-yellow-500 text-yellow-900 font-bold text-center p-2 rounded-lg mb-6">
-                <p>Você está em modo de suporte. As alterações feitas aqui afetarão a barbearia do seu cliente.</p>
-            </div>
             <div id="welcome-section" class="bg-gray-800 p-6 rounded-lg mb-8">
                 <h1 id="shop-name-title" class="text-3xl font-bold text-white">Carregando barbearia...</h1>
                 <p class="text-gray-400 mt-2">Este é o seu centro de controlo. Gira os seus serviços, barbeiros e agendamentos aqui.</p>
                 <div class="mt-4 bg-gray-700 p-4 rounded-lg">
-                    <p class="text-sm font-bold text-amber-300">Link da página de agendamento:</p>
+                    <p class="text-sm font-bold text-amber-300">Link da sua página de agendamento:</p>
                     <a id="public-link" href="#" target="_blank" class="text-amber-400 hover:underline break-all">A gerar link...</a>
                     <button id="copy-link-button" class="ml-2 bg-gray-600 text-white px-3 py-1 text-xs font-bold rounded hover:bg-gray-500">Copiar</button>
                 </div>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-1 space-y-8">
+                    
+                    <!-- SECÇÃO DE SUBSCRIÇÃO ATUALIZADA -->
                     <div class="bg-gray-800 p-6 rounded-lg border border-amber-400">
                         <h2 class="text-2xl font-bold text-white mb-4">Subscrição</h2>
                         <div class="space-y-2">
@@ -79,6 +78,7 @@
                         </div>
                         <button id="manage-subscription-button" class="cta-button w-full mt-4 bg-amber-500 text-gray-900 font-bold py-2 rounded-lg hover:bg-amber-600">Gerir Pagamento</button>
                     </div>
+
                     <div class="bg-gray-800 p-6 rounded-lg">
                         <h2 class="text-2xl font-bold text-white mb-4">Gerir Serviços</h2>
                         <form id="service-form" class="space-y-4">
@@ -93,9 +93,9 @@
                     <div class="bg-gray-800 p-6 rounded-lg">
                         <h2 class="text-2xl font-bold text-white mb-4">Gerir Barbeiros</h2>
                         <form id="barber-form" class="space-y-4">
-                             <input type="text" id="barber-name" placeholder="Nome do Barbeiro" class="w-full p-3 bg-gray-700 rounded-lg" required>
-                             <input type="text" id="barber-specialty" placeholder="Especialidade" class="w-full p-3 bg-gray-700 rounded-lg" required>
-                             <button type="submit" class="w-full bg-amber-500 text-gray-900 font-bold py-2 rounded-lg hover:bg-amber-600">Adicionar Barbeiro</button>
+                            <input type="text" id="barber-name" placeholder="Nome do Barbeiro" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <input type="text" id="barber-specialty" placeholder="Especialidade" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <button type="submit" class="w-full bg-amber-500 text-gray-900 font-bold py-2 rounded-lg hover:bg-amber-600">Adicionar Barbeiro</button>
                         </form>
                         <div id="barbers-list-admin" class="mt-6 space-y-2"></div>
                     </div>
@@ -112,16 +112,14 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, where, getDocs, doc, getDoc, onSnapshot, addDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", authDomain: "barbeariasergipana-b32b6.firebaseapp.com", projectId: "barbeariasergipana-b32b6", storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", messagingSenderId: "562815971114", appId: "1:562815971114:web:73e811a601c6b64e8ab853", measurementId: "G-1M4H1Z3TV5" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        const SUPER_ADMIN_UID = "ftNGvDucWfZmdsrrZ9ffpWebOUU2";
+
         let currentShop = null;
-        let isTestModeActive = false;
 
         const loader = document.getElementById('full-page-loader');
         const loginContainer = document.getElementById('login-container');
@@ -137,60 +135,38 @@
             loginContainer.style.display = 'none';
             dashboardContainer.style.display = 'none';
             document.getElementById(viewName).style.display = 'block';
-            if(viewName === 'login-container') document.getElementById(viewName).style.display = 'flex';
-        }
-
-        async function getPaymentTestModeStatus() {
-            const configRef = doc(db, "platform_config", "payment");
-            const configSnap = await getDoc(configRef);
-            return configSnap.exists() ? configSnap.data().testMode : false;
+            if (viewName === 'login-container') document.getElementById(viewName).style.display = 'flex';
         }
 
         onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                showView('login-container');
-                return;
-            }
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const viewShopId = urlParams.get('shop_id_view');
-            let shopData;
-
-            if (user.uid === SUPER_ADMIN_UID && viewShopId) {
-                document.getElementById('support-banner').style.display = 'block';
-                const shopRef = doc(db, 'shops', viewShopId);
-                const shopSnap = await getDoc(shopRef);
-                shopData = shopSnap.exists() ? { id: shopSnap.id, ...shopSnap.data() } : null;
-            } else {
-                document.getElementById('support-banner').style.display = 'none';
+            if (user) {
                 const q = query(collection(db, 'shops'), where("ownerUid", "==", user.uid));
                 const querySnapshot = await getDocs(q);
+
                 if (!querySnapshot.empty) {
                     const shopDoc = querySnapshot.docs[0];
-                    shopData = { id: shopDoc.id, ...shopDoc.data() };
-                }
-            }
-
-            if (shopData) {
-                currentShop = shopData;
-                // **NOVA VERIFICAÇÃO DE STATUS**
-                if (currentShop.subscriptionStatus === 'inactive' && user.uid !== SUPER_ADMIN_UID) {
-                    alert("A sua subscrição está inativa. Por favor, entre em contacto com o suporte.");
-                    signOut(auth);
-                    return; // Interrompe a execução
-                }
-                isTestModeActive = await getPaymentTestModeStatus();
-                initializeDashboard(user);
-                showView('dashboard-container');
-            } else {
-                const isNew = sessionStorage.getItem('isNewRegistration');
-                if (isNew) {
-                    sessionStorage.removeItem('isNewRegistration');
-                    setTimeout(() => location.reload(), 2000);
+                    currentShop = { id: shopDoc.id, ...shopDoc.data() };
+                    
+                    if (currentShop.subscriptionStatus === 'inactive') {
+                        alert("A sua subscrição está inativa. Por favor, entre em contacto com o suporte.");
+                        signOut(auth);
+                        return;
+                    }
+                    
+                    initializeDashboard(user);
+                    showView('dashboard-container');
                 } else {
-                    alert("Não foi possível encontrar os dados da sua barbearia. Por favor, tente fazer login novamente.");
-                    signOut(auth);
+                    const isNewRegistration = sessionStorage.getItem('isNewRegistration');
+                    if(isNewRegistration){
+                        sessionStorage.removeItem('isNewRegistration');
+                        setTimeout(()=> location.reload(), 2000);
+                    } else {
+                        alert("Não foi possível encontrar os dados da sua barbearia. Por favor, tente fazer login novamente.");
+                        signOut(auth);
+                    }
                 }
+            } else {
+                showView('login-container');
             }
         });
 
@@ -200,19 +176,27 @@
             const publicLink = document.getElementById('public-link');
             publicLink.href = `barbearia.html?shop=${currentShop.id}`;
             publicLink.textContent = publicLink.href;
+
             updateSubscriptionUI();
+
             const adminDatePicker = document.getElementById('admin-date-picker-dash');
             const today = new Date().toISOString().split('T')[0];
             adminDatePicker.value = today;
+
             listenToCollection('services');
             listenToCollection('barbers');
             listenToAppointmentsForDate(today);
+
             setupForms();
         }
-
+        
         function updateSubscriptionUI() {
             const status = currentShop.subscriptionStatus || 'trialing';
-            const statusMap = { trialing: 'Em Teste Gratuito', active: 'Ativa', inactive: 'Inativa' };
+            const statusMap = {
+                trialing: 'Em Teste Gratuito',
+                active: 'Ativa',
+                inactive: 'Inativa'
+            };
             subscriptionStatusEl.textContent = statusMap[status];
             if (status === 'active') {
                 manageSubscriptionButton.textContent = 'Gerir Assinatura';
@@ -296,32 +280,42 @@
 
         logoutButton.addEventListener('click', () => signOut(auth));
         
+        // **NOVA LÓGICA:** Event listener para o botão de gestão de subscrição
         manageSubscriptionButton.addEventListener('click', async () => {
             if (!currentShop) return;
+
             manageSubscriptionButton.disabled = true;
-            manageSubscriptionButton.textContent = 'A processar...';
-            if (isTestModeActive) {
-                console.log("Modo de Teste: Ativando subscrição diretamente.");
-                const shopRef = doc(db, "shops", currentShop.id);
-                await updateDoc(shopRef, { subscriptionStatus: 'active' });
-                alert("Modo de Teste: Subscrição ativada com sucesso!");
-                location.reload();
-            } else {
-                try {
-                    const response = await fetch('/.netlify/functions/create-mercadopago-checkout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ shopId: currentShop.id, ownerEmail: auth.currentUser.email }),
-                    });
-                    if (!response.ok) throw new Error('Falha na resposta da função Netlify.');
-                    const data = await response.json();
-                    if (data.checkoutUrl) window.location.href = data.checkoutUrl;
-                    else throw new Error('URL de checkout não recebido.');
-                } catch (error) {
-                    console.error("Erro ao gerir subscrição:", error);
-                    alert("Ocorreu um erro ao tentar aceder ao portal de pagamentos.");
-                    manageSubscriptionButton.disabled = false;
+            manageSubscriptionButton.textContent = 'A gerar link...';
+
+            try {
+                // Chama a nossa função Netlify para criar a sessão de checkout
+                const response = await fetch('/.netlify/functions/create-mercadopago-checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        shopId: currentShop.id,
+                        ownerEmail: auth.currentUser.email
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Falha na resposta da função Netlify.');
                 }
+                
+                const data = await response.json();
+
+                if (data.checkoutUrl) {
+                    // Redireciona o utilizador para a página de pagamento do Mercado Pago
+                    window.location.href = data.checkoutUrl;
+                } else {
+                    throw new Error('URL de checkout não recebido.');
+                }
+
+            } catch (error) {
+                console.error("Erro ao gerir subscrição:", error);
+                alert("Ocorreu um erro ao tentar aceder ao portal de pagamentos. Tente novamente.");
+                manageSubscriptionButton.disabled = false;
+                updateSubscriptionUI(); // Restaura o texto do botão
             }
         });
         
