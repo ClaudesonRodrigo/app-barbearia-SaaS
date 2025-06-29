@@ -8,8 +8,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
-    <!-- Link para o seu ficheiro de estilo -->
-    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .font-body { font-family: 'Inter', sans-serif; }
+        .font-title { font-family: 'Playfair Display', serif; }
+        .cta-button {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2);
+        }
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+        }
+    </style>
 </head>
 <body class="font-body bg-gray-900 text-gray-300">
 
@@ -100,8 +110,8 @@
                     subscriptionStatus: 'trialing'
                 });
                 
-                // **SOLUÇÃO DEFINITIVA:** Guarda no navegador que um registo acabou de acontecer.
-                // O dashboard usará este sinalizador para esperar pelos dados.
+                // SOLUÇÃO DEFINITIVA: Guarda no navegador um sinalizador para
+                // que o dashboard saiba que precisa de ser paciente.
                 sessionStorage.setItem('isNewRegistration', 'true');
 
                 // Redireciona para o dashboard
