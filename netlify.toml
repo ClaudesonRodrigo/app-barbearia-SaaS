@@ -1,7 +1,13 @@
+# Ficheiro de configuração para o Netlify
+
 [functions]
+  # Diz ao Netlify que as nossas funções de backend estão nesta pasta.
   directory = "netlify/functions/"
+  # Usa uma ferramenta moderna e rápida para "empacotar" as nossas funções.
   node_bundler = "esbuild"
 
+# Esta regra de redirecionamento é opcional mas recomendada.
+# Ela cria um atalho mais amigável para aceder às nossas funções.
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
