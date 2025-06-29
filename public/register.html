@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <!-- Link para o seu ficheiro de estilo -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="font-body bg-gray-900 text-gray-300">
@@ -45,56 +46,83 @@
         </div>
     </div>
 
+    <!-- Script de Registo Integrado -->
     <script type="module">
+        // Importa apenas o necessário do SDK do Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", authDomain: "barbeariasergipana-b32b6.firebaseapp.com", projectId: "barbeariasergipana-b32b6", storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", messagingSenderId: "562815971114", appId: "1:562815971114:web:73e811a601c6b64e8ab853", measurementId: "G-1M4H1Z3TV5" };
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M",
+            authDomain: "barbeariasergipana-b32b6.firebaseapp.com",
+            projectId: "barbeariasergipana-b32b6",
+            storageBucket: "barbeariasergipana-b32b6.firebasestorage.app",
+            messagingSenderId: "562815971114",
+            appId: "1:562815971114:web:73e811a601c6b64e8ab853",
+            measurementId: "G-1M4H1Z3TV5"
+        };
+
+        // Inicializa os serviços Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // Elementos do DOM
         const registerForm = document.getElementById('register-form');
         const registerButton = document.getElementById('register-button');
         const formMessage = document.getElementById('form-message');
 
+        // Lógica de Registo
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault(); 
             registerButton.disabled = true;
             registerButton.innerText = 'A criar...';
             formMessage.innerText = '';
-            
+            formMessage.classList.remove('text-red-500', 'text-green-500');
+
             const shopName = registerForm['shop-name'].value;
             const ownerEmail = registerForm['owner-email'].value;
             const ownerPassword = registerForm['owner-password'].value;
 
             try {
+                // Cria o utilizador no Firebase Auth
                 const userCredential = await createUserWithEmailAndPassword(auth, ownerEmail, ownerPassword);
                 const user = userCredential.user;
 
-                // **CORREÇÃO:** Agora salvamos o email do dono junto com os outros dados.
+                // Cria o documento da loja no Firestore
                 const shopRef = await addDoc(collection(db, "shops"), {
                     ownerUid: user.uid,
-                    ownerEmail: ownerEmail, // Salva o email
+                    ownerEmail: ownerEmail,
                     shopName: shopName,
                     createdAt: serverTimestamp(),
                     subscriptionStatus: 'trialing'
                 });
                 
+                // **SOLUÇÃO DEFINITIVA:** Guarda no navegador que um registo acabou de acontecer.
+                // O dashboard usará este sinalizador para esperar pelos dados.
+                sessionStorage.setItem('isNewRegistration', 'true');
+
+                // Redireciona para o dashboard
                 window.location.href = `dashboard.html`;
 
             } catch (error) {
+                console.error("Erro no registo:", error);
                 registerButton.disabled = false;
                 registerButton.innerText = 'Criar Minha Barbearia';
                 formMessage.classList.add('text-red-500');
+
                 if (error.code === 'auth/email-already-in-use') {
                     formMessage.innerText = 'Este email já está a ser utilizado. Por favor, faça login ou use outro email.';
+                } else if (error.code === 'auth/weak-password') {
+                    formMessage.innerText = 'A sua senha é muito fraca. Tente uma com pelo menos 6 caracteres.';
                 } else {
                     formMessage.innerText = 'Ocorreu um erro ao criar a sua conta. Tente novamente.';
                 }
             }
         });
     </script>
+
 </body>
 </html>
