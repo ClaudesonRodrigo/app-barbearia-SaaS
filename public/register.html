@@ -110,12 +110,9 @@
                     subscriptionStatus: 'trialing'
                 });
                 
-                // SOLUÇÃO DEFINITIVA: Guarda no navegador um sinalizador para
-                // que o dashboard saiba que precisa de ser paciente.
-                sessionStorage.setItem('isNewRegistration', 'true');
-
-                // Redireciona para o dashboard
-                window.location.href = `dashboard.html`;
+                // SOLUÇÃO DEFINITIVA: Redireciona para o dashboard passando o ID da nova loja
+                // no URL. O dashboard usará este ID para carregar os dados diretamente.
+                window.location.href = `dashboard.html?new_shop_id=${shopRef.id}`;
 
             } catch (error) {
                 console.error("Erro no registo:", error);
