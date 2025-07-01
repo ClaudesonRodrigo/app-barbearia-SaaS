@@ -24,11 +24,11 @@
                 <form id="login-form" class="space-y-6">
                     <div>
                         <label for="owner-email" class="block text-sm font-bold text-gray-300 mb-2">Seu Email</label>
-                        <input type="email" id="owner-email" name="owner-email" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
+                        <input type="email" id="owner-email" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
                     </div>
                     <div>
                         <label for="owner-password" class="block text-sm font-bold text-gray-300 mb-2">Sua Senha</label>
-                        <input type="password" id="owner-password" name="owner-password" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
+                        <input type="password" id="owner-password" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
                     </div>
                     <button type="submit" id="login-button" class="cta-button w-full bg-amber-500 text-gray-900 font-bold text-lg py-3 px-8 rounded-lg">Entrar</button>
                 </form>
@@ -139,10 +139,8 @@
 
         async function findShopDataForUser(user, retries = 3) {
             if (retries <= 0) return null;
-
             const q = query(collection(db, 'shops'), where("ownerUid", "==", user.uid));
             const querySnapshot = await getDocs(q);
-
             if (!querySnapshot.empty) {
                 const shopDoc = querySnapshot.docs[0];
                 return { id: shopDoc.id, ...shopDoc.data() };
@@ -162,11 +160,9 @@
                 showView('login-container');
                 return;
             }
-
             const urlParams = new URLSearchParams(window.location.search);
             const viewShopId = urlParams.get('shop_id_view');
             let shopData;
-
             if (user.uid === SUPER_ADMIN_UID && viewShopId) {
                 document.getElementById('support-banner').style.display = 'block';
                 const shopRef = doc(db, 'shops', viewShopId);
@@ -175,7 +171,6 @@
             } else {
                 shopData = await findShopDataForUser(user);
             }
-
             if (shopData) {
                 sessionStorage.removeItem('isNewRegistration');
                 currentShop = shopData;
@@ -191,20 +186,15 @@
         function initializeDashboard(user) {
             document.getElementById('user-email').textContent = user.email;
             document.getElementById('shop-name-title').textContent = currentShop.shopName;
-            
             const publicLinkEl = document.getElementById('public-link');
-            // Lógica melhorada para construir o link público
             const pageUrl = new URL('public/barbearia.html', window.location.href);
             pageUrl.searchParams.set('shop', currentShop.id);
             publicLinkEl.href = pageUrl.href;
             publicLinkEl.textContent = pageUrl.href;
-
             updateSubscriptionUI();
-            
             const adminDatePicker = document.getElementById('admin-date-picker-dash');
             const today = new Date().toISOString().split('T')[0];
             adminDatePicker.value = today;
-            
             listenToCollection('services');
             listenToCollection('barbers');
             listenToAppointmentsForDate(today);
@@ -238,6 +228,9 @@
                 container.querySelectorAll('.delete-btn').forEach(button => {
                     button.onclick = () => deleteItem(collectionName, button.dataset.id);
                 });
+            }, (error) => {
+                console.error(`Erro no ouvinte de ${collectionName}:`, error);
+                alert(`Erro ao carregar dados de ${collectionName}. Verifique as permissões e a conexão.`);
             });
         }
         
@@ -254,6 +247,9 @@
                      el.innerHTML = `<div class="flex justify-between items-center"><p class="font-bold text-white">${appt.time} - ${appt.serviceName}</p><p class="text-sm text-gray-400">${appt.barberName}</p></div><p class="text-sm text-amber-400 mt-1">Cliente: ${appt.userName}</p>`;
                      container.appendChild(el);
                  });
+             }, (error) => {
+                console.error(`Erro no ouvinte de agendamentos:`, error);
+                alert(`Erro ao carregar agendamentos. Verifique as permissões e a conexão.`);
              });
         }
         
@@ -263,17 +259,24 @@
             }
         }
 
+        // FUNÇÃO CORRIGIDA PARA INCLUIR TODOS OS CAMPOS
         function setupForms() {
             const serviceForm = document.getElementById('service-form');
             serviceForm.innerHTML = `
                 <input type="text" name="service-name" placeholder="Nome do Serviço" required class="w-full p-2 bg-gray-700 rounded text-white">
+                <input type="text" name="service-description" placeholder="Descrição (ex: Corte e Barba)" class="w-full p-2 bg-gray-700 rounded text-white">
                 <input type="number" name="service-price" placeholder="Preço (ex: 25.50)" step="0.01" required class="w-full p-2 bg-gray-700 rounded text-white">
                 <input type="number" name="service-duration" placeholder="Duração (minutos)" required class="w-full p-2 bg-gray-700 rounded text-white">
                 <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700">Adicionar Serviço</button>
             `;
             serviceForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const newService = { name: e.target['service-name'].value, price: e.target['service-price'].value, duration: parseInt(e.target['service-duration'].value, 10) };
+                const newService = { 
+                    name: e.target['service-name'].value,
+                    description: e.target['service-description'].value,
+                    price: e.target['service-price'].value, 
+                    duration: parseInt(e.target['service-duration'].value, 10) 
+                };
                 await addDoc(collection(db, `shops/${currentShop.id}/services`), newService);
                 serviceForm.reset();
             });
@@ -281,11 +284,16 @@
             const barberForm = document.getElementById('barber-form');
             barberForm.innerHTML = `
                 <input type="text" name="barber-name" placeholder="Nome do Barbeiro" required class="w-full p-2 bg-gray-700 rounded text-white">
+                <input type="text" name="barber-specialty" placeholder="Especialidade (ex: Barba e Cabelo)" class="w-full p-2 bg-gray-700 rounded text-white">
                 <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700">Adicionar Barbeiro</button>
             `;
             barberForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const newBarber = { name: e.target['barber-name'].value, photo: `https://placehold.co/400x400/1f2937/a8a29e?text=${e.target['barber-name'].value.charAt(0)}` };
+                const newBarber = { 
+                    name: e.target['barber-name'].value, 
+                    specialty: e.target['barber-specialty'].value,
+                    photo: `https://placehold.co/400x400/1f2937/a8a29e?text=${e.target['barber-name'].value.charAt(0)}` 
+                };
                 await addDoc(collection(db, `shops/${currentShop.id}/barbers`), newBarber);
                 barberForm.reset();
             });
