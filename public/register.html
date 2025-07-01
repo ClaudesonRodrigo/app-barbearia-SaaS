@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crie sua Conta - AgendaBarber</title>
+    <title>Agenda Barber - O Futuro da Sua Barbearia</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,125 +12,103 @@
 </head>
 <body class="font-body bg-gray-900 text-gray-300">
 
-    <div class="min-h-screen flex flex-col items-center justify-center p-4">
-        <div class="w-full max-w-lg text-center">
-            <h1 class="font-title text-4xl font-bold text-amber-400">Registre sua Barbearia</h1>
-            <p class="text-gray-400 mt-2 mb-6">Comece a gerir seus agendamentos de forma simples.</p>
-        </div>
-        <main class="w-full max-w-lg bg-gray-800 p-8 rounded-lg shadow-2xl">
-            <form id="register-form" class="space-y-6">
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="shop-name" class="block text-sm font-bold text-gray-300 mb-2">Nome da Barbearia</label>
-                        <input type="text" id="shop-name" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
-                    </div>
-                    <div>
-                        <label for="shop-address" class="block text-sm font-bold text-gray-300 mb-2">Endereço Completo</label>
-                        <input type="text" id="shop-address" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
-                    </div>
-                </div>
-
-                <div>
-                    <label for="owner-email" class="block text-sm font-bold text-gray-300 mb-2">Seu Email (para login)</label>
-                    <input type="email" id="owner-email" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="owner-password" class="block text-sm font-bold text-gray-300 mb-2">Crie uma Senha</label>
-                        <input type="password" id="owner-password" required minlength="6" class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
-                    </div>
-                    <div>
-                        <label for="owner-password-confirm" class="block text-sm font-bold text-gray-300 mb-2">Confirme a Senha</label>
-                        <input type="password" id="owner-password-confirm" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
-                    </div>
-                </div>
-
-                <button type="submit" id="register-button" class="cta-button w-full bg-amber-500 text-gray-900 font-bold text-lg py-3 px-8 rounded-lg hover:bg-amber-600 transition">Criar Conta e Aceder</button>
-            </form>
-            <div id="form-message" class="mt-4 text-center text-red-400 font-bold"></div>
-        </main>
-        <footer class="text-center mt-6">
-            <p class="text-sm text-gray-500">Já tem uma conta? <a href="dashboard.html" class="font-bold text-amber-400 hover:underline">Faça login</a></p>
-        </footer>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const firebaseConfig = { 
-            apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", 
-            authDomain: "barbeariasergipana-b32b6.firebaseapp.com", 
-            projectId: "barbeariasergipana-b32b6", 
-            storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", 
-            messagingSenderId: "562815971114", 
-            appId: "1:562815971114:web:73e811a601c6b64e8ab853", 
-            measurementId: "G-1M4H1Z3TV5" 
-        };
-        
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        const registerForm = document.getElementById('register-form');
-        const registerButton = document.getElementById('register-button');
-        const formMessage = document.getElementById('form-message');
-
-        registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+    <header class="bg-gray-800/80 backdrop-blur-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="font-title text-2xl font-bold text-white">
+                <a href="index.html">Agenda<span class="text-amber-400">Barber</span></a>
+            </div>
             
-            registerButton.disabled = true;
-            registerButton.textContent = 'Aguarde...';
-            formMessage.textContent = '';
+            <ul class="hidden md:flex items-center space-x-6">
+                <li><a href="#features" class="hover:text-amber-400 transition-colors">Funcionalidades</a></li>
+                <li><a href="#pricing" class="hover:text-amber-400 transition-colors">Preços</a></li>
+                <li><a href="register.html" class="bg-amber-400 text-gray-900 font-bold py-2 px-4 rounded-lg hover:bg-amber-300 transition-colors">Começar Agora</a></li>
+            </ul>
 
-            const shopName = document.getElementById('shop-name').value;
-            const shopAddress = document.getElementById('shop-address').value;
-            const email = document.getElementById('owner-email').value;
-            const password = document.getElementById('owner-password').value;
-            const passwordConfirm = document.getElementById('owner-password-confirm').value;
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="text-white focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </nav>
 
-            if (password !== passwordConfirm) {
-                formMessage.textContent = 'As senhas não coincidem.';
-                registerButton.disabled = false;
-                registerButton.textContent = 'Criar Conta e Aceder';
-                return;
-            }
+        <div id="mobile-menu" class="hidden md:hidden">
+            <ul class="flex flex-col items-center py-4 space-y-4">
+                <li><a href="#features" class="hover:text-amber-400 transition-colors">Funcionalidades</a></li>
+                <li><a href="#pricing" class="hover:text-amber-400 transition-colors">Preços</a></li>
+                <li><a href="register.html" class="w-full text-center bg-amber-400 text-gray-900 font-bold py-2 px-4 rounded-lg hover:bg-amber-300 transition-colors">Começar Agora</a></li>
+            </ul>
+        </div>
+    </header>
 
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const newOwner = userCredential.user;
+    <section class="hero-bg text-white py-20 md:py-32">
+        <div class="container mx-auto px-6 text-center">
+            <h1 class="font-title text-5xl md:text-7xl font-black mb-4">Modernize a Sua Barbearia. <br> <span class="gradient-text">Nunca Mais Perca um Cliente.</span></h1>
+            <p class="text-lg md:text-xl max-w-3xl mx-auto mb-8 text-gray-400">Automatize os seus agendamentos, reduza as faltas e ofereça uma experiência digital que os seus clientes vão adorar. Tudo num só lugar.</p>
+            <a href="register.html" class="cta-button bg-amber-400 text-gray-900 font-bold text-lg py-4 px-8 rounded-lg">Experimente 30 Dias Grátis</a>
+        </div>
+    </section>
 
-                const newShopData = {
-                    ownerUid: newOwner.uid,
-                    shopName: shopName,
-                    address: shopAddress,
-                    subscriptionStatus: 'trialing',
-                    createdAt: Timestamp.now(),
-                    operatingHours: { weekday: "09:00 - 18:00", saturday: "Fechado", sunday: "Fechado" },
-                    galleryImages: []
-                };
+    <section id="features" class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="font-title text-4xl font-bold text-white">Tudo o que Precisa para Crescer</h2>
+                <p class="text-gray-400 mt-2">Funcionalidades pensadas para o dia a dia da sua barbearia.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="feature-card bg-gray-800 p-8 rounded-lg">
+                    <div class="text-amber-400 mb-4"><svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Agenda Inteligente</h3>
+                    <p>Os seus clientes agendam online 24/7. A sua agenda é atualizada em tempo real, sem conflitos de horários.</p>
+                </div>
+                <div class="feature-card bg-gray-800 p-8 rounded-lg">
+                     <div class="text-amber-400 mb-4"><svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg></div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Lembretes por WhatsApp</h3>
+                    <p>Reduza as faltas em até 70% com lembretes automáticos enviados diretamente para o WhatsApp do seu cliente.</p>
+                </div>
+                <div class="feature-card bg-gray-800 p-8 rounded-lg">
+                     <div class="text-amber-400 mb-4"><svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg></div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Consultor de Estilo IA</h3>
+                    <p>O nosso assistente com Inteligência Artificial sugere penteados aos seus clientes, oferecendo um serviço único e personalizado.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="pricing" class="bg-gray-800 py-20">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="font-title text-4xl font-bold text-white">Um Preço Simples e Justo</h2>
+            <p class="text-gray-400 mt-2 max-w-2xl mx-auto">Sem taxas escondidas. Cancele quando quiser. Comece a crescer hoje mesmo.</p>
+            <div class="max-w-md mx-auto mt-10 bg-gray-900 rounded-lg p-10 border-2 border-amber-400 shadow-2xl">
+                <h3 class="text-2xl font-bold text-white">Plano Profissional</h3>
+                <p class="font-title text-6xl font-black text-white my-4">R$ 49<span class="text-3xl">/mês</span></p>
+                <ul class="space-y-4 text-left">
+                    <li class="flex items-center"><svg class="w-6 h-6 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Agendamentos Ilimitados</li>
+                    <li class="flex items-center"><svg class="w-6 h-6 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Até 5 Barbeiros</li>
+                    <li class="flex items-center"><svg class="w-6 h-6 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Painel de Administrador</li>
+                    <li class="flex items-center"><svg class="w-6 h-6 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Consultor de Estilo IA</li>
+                    <li class="flex items-center"><svg class="w-6 h-6 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Lembretes por WhatsApp (Em breve)</li>
+                </ul>
+                <a href="register.html" class="cta-button mt-8 w-full block bg-amber-400 text-gray-900 font-bold text-lg py-4 px-8 rounded-lg">Começar o Teste Gratuito</a>
+            </div>
+        </div>
+    </section>
 
-                await addDoc(collection(db, "shops"), newShopData);
-                
-                sessionStorage.setItem('isNewRegistration', 'true');
-                // Caminho Corrigido
-                window.location.href = 'dashboard.html';
+    <footer id="contact" class="bg-gray-900 text-gray-400 py-12">
+        <div class="container mx-auto px-4 text-center">
+            <h3 class="font-title text-2xl text-white">Ainda tem dúvidas?</h3>
+            <p class="mt-2">Envie-nos uma mensagem. Estamos prontos para o ajudar.</p>
+            <p class="mt-4 text-xl text-white font-bold"><a href="tel:79999998888" class="hover:text-amber-400">(79) 99999-8888</a></p>
+            <p><a href="mailto:contato@agendabarber.com.br" class="hover:text-amber-400">contato@agendabarber.com.br</a></p>
+            <p class="text-xs mt-8">&copy; 2025 AgendaBarber. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+    
+    <script>
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
 
-            } catch (error) {
-                if (error.code === 'auth/email-already-in-use') {
-                    formMessage.textContent = 'Este email já está em uso. Tente fazer login.';
-                } else if (error.code === 'auth/weak-password') {
-                    formMessage.textContent = 'A senha é muito fraca. Tente uma com pelo menos 6 caracteres.';
-                } else {
-                    formMessage.textContent = 'Ocorreu um erro ao criar a conta. Tente novamente.';
-                    console.error('Erro de registo:', error);
-                }
-                registerButton.disabled = false;
-                registerButton.textContent = 'Criar Conta e Aceder';
-            }
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
         });
     </script>
 </body>
