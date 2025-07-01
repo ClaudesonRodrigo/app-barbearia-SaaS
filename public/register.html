@@ -52,7 +52,7 @@
             <div id="form-message" class="mt-4 text-center text-red-400 font-bold"></div>
         </main>
         <footer class="text-center mt-6">
-            <p class="text-sm text-gray-500">Já tem uma conta? <a href="../dashboard.html" class="font-bold text-amber-400 hover:underline">Faça login</a></p>
+             <p class="text-sm text-gray-500">Já tem uma conta? <a href="../dashboard.html" class="font-bold text-amber-400 hover:underline">Faça login</a></p>
         </footer>
     </div>
 
@@ -61,7 +61,6 @@
         import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // VERIFIQUE SE ESTES DADOS CORRESPONDEM EXATAMENTE AOS DO SEU PAINEL FIREBASE
         const firebaseConfig = { 
             apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", 
             authDomain: "barbeariasergipana-b32b6.firebaseapp.com", 
@@ -117,6 +116,7 @@
                 await addDoc(collection(db, "shops"), newShopData);
                 
                 sessionStorage.setItem('isNewRegistration', 'true');
+                 // CAMINHO CORRIGIDO: Leva para o dashboard na pasta raiz
                 window.location.href = '../dashboard.html';
 
             } catch (error) {
