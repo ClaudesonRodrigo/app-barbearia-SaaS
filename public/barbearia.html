@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
     <style>
         .font-title { font-family: 'Playfair Display', serif; }
         .font-body { font-family: 'Inter', sans-serif; }
@@ -23,7 +24,7 @@
         <header id="shop-header" class="text-center mb-10">
             <h1 id="shop-name" class="font-title text-4xl md:text-5xl font-bold text-amber-400">Carregando Barbearia...</h1>
             <p id="shop-address" class="text-gray-400 mt-2"></p>
-            <div id="shop-hours" class="text-sm text-amber-300 mt-4 space-x-4"></div>
+            <div id="shop-hours" class="text-sm text-amber-300 mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2"></div>
         </header>
         
         <section id="auth-section" class="text-center mb-8">
@@ -70,7 +71,15 @@
         import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", authDomain: "barbeariasergipana-b32b6.firebaseapp.com", projectId: "barbeariasergipana-b32b6", storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", messagingSenderId: "562815971114", appId: "1:562815971114:web:73e811a601c6b64e8ab853", measurementId: "G-1M4H1Z3TV5" };
+        const firebaseConfig = { 
+            apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", 
+            authDomain: "barbeariasergipana-b32b6.firebaseapp.com", 
+            projectId: "barbeariasergipana-b32b6", 
+            storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", 
+            messagingSenderId: "562815971114", 
+            appId: "1:562815971114:web:73e811a601c6b64e8ab853", 
+            measurementId: "G-1M4H1Z3TV5" 
+        };
         
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -80,18 +89,18 @@
         let booking = { shopId: null, service: null, barber: null, date: null, time: null, customerName: null, customerPhone: null };
 
         window.onload = async () => {
-            const shopId = getShopIdFromURL();
+            const shopId = getShopIdFromURL(); // A chamada está aqui
             if (!shopId) {
                 document.body.innerHTML = '<h1 class="text-center text-red-500 text-2xl mt-10">Barbearia não encontrada. Verifique o link.</h1>';
                 return;
             }
             booking.shopId = shopId;
-            
             await fetchAndRenderShopDetails(shopId);
-            
             document.getElementById('booking-flow').innerHTML = getBookingFlowHTML();
-            document.getElementById('date-picker').min = new Date().toISOString().split('T')[0];
-
+            const datePicker = document.getElementById('date-picker');
+            if(datePicker) {
+                datePicker.min = new Date().toISOString().split('T')[0];
+            }
             addEventListeners();
         };
 
@@ -105,13 +114,15 @@
             } else {
                 document.getElementById('user-info').classList.add('hidden');
                 document.getElementById('login-prompt').classList.remove('hidden');
-                if (customerNameField) customerNameFiel.value = '';
+                if (customerNameField) customerNameField.value = '';
             }
         });
 
         getRedirectResult(auth)
             .then((result) => {
-                if (result) console.log("Login com redirecionamento bem-sucedido:", result.user);
+                if (result) {
+                    console.log("Login com redirecionamento bem-sucedido:", result.user);
+                }
             }).catch((error) => console.error("Erro no getRedirectResult:", error));
 
         function addEventListeners() {
@@ -132,21 +143,34 @@
                 if (e.target.id === 'customer-form') handleBookingSubmit(e);
             });
         }
+        
+        // --- AQUI ESTÁ A FUNÇÃO QUE FALTAVA ---
+        function getShopIdFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('shop');
+        }
 
         async function fetchAndRenderShopDetails(shopId) {
-            const shopRef = doc(db, 'shops', shopId);
-            const shopSnap = await getDoc(shopRef);
-            if (shopSnap.exists()) {
-                const shopData = shopSnap.data();
-                document.getElementById('shop-name').textContent = shopData.shopName;
-                document.getElementById('shop-address').textContent = shopData.address || 'Endereço não informado';
-                document.getElementById('shop-name-confirm').textContent = shopData.shopName;
-                renderOperatingHours(shopData.operatingHours);
-                renderGallery(shopData.galleryImages);
-                renderMap(shopData.address);
-                document.getElementById('details-section').classList.remove('hidden');
-                fetchAndRenderServices(shopId);
-            } else { throw new Error("Shop not found"); }
+            try {
+                const shopRef = doc(db, 'shops', shopId);
+                const shopSnap = await getDoc(shopRef);
+                if (shopSnap.exists()) {
+                    const shopData = shopSnap.data();
+                    document.getElementById('shop-name').textContent = shopData.shopName;
+                    document.getElementById('shop-address').textContent = shopData.address || 'Endereço não informado';
+                    document.getElementById('shop-name-confirm').textContent = shopData.shopName;
+                    renderOperatingHours(shopData.operatingHours);
+                    renderGallery(shopData.galleryImages);
+                    renderMap(shopData.address);
+                    document.getElementById('details-section').classList.remove('hidden');
+                    fetchAndRenderServices(shopId);
+                } else { 
+                    throw new Error("Shop not found"); 
+                }
+            } catch (error) {
+                console.error("Erro ao carregar detalhes da barbearia:", error);
+                document.body.innerHTML = `<h1 class="text-center text-red-500 text-2xl mt-10">Erro ao carregar dados da barbearia. Verifique o console.</h1>`;
+            }
         }
 
         function renderOperatingHours(hours) {
@@ -160,7 +184,12 @@
         }
 
         function renderGallery(images) {
-            if (!images || images.length === 0) return;
+            if (!images || images.length === 0) {
+                // Opcional: esconder a seção da galeria se não houver imagens
+                const gallerySection = document.getElementById('gallery-container').parentElement;
+                if(gallerySection) gallerySection.style.display = 'none';
+                return;
+            };
             const container = document.getElementById('gallery-container');
             container.innerHTML = '';
             images.forEach(imageUrl => {
@@ -185,7 +214,7 @@
             iframe.style.border = 0;
             iframe.loading = "lazy";
             iframe.allowFullscreen = true;
-            iframe.src = `https://www.google.com/maps/embed/v1/place?key=API_KEY&q=URL_ENCODED_ADDRESS`;
+            iframe.src = `https://www.google.com/maps/embed/v1/place?key=${API_KEY}&q=${encodeURIComponent(address)}`;
             container.innerHTML = '';
             container.appendChild(iframe);
         }
@@ -229,12 +258,93 @@
             `;
         }
 
-        async function fetchAndRenderServices(shopId) { /* ...código de renderização... */ }
-        async function fetchAndRenderBarbers(shopId) { /* ...código de renderização... */ }
-        async function generateAndRenderTimeslots() { /* ...código de renderização... */ }
-        function selectService(service, cardElement) { /* ...código de seleção... */ }
-        function selectBarber(barber, cardElement) { /* ...código de seleção... */ }
-        function selectTime(time, buttonElement) { /* ...código de seleção... */ }
+        async function fetchAndRenderServices(shopId) {
+            const servicesRef = collection(db, `shops/${shopId}/services`);
+            const snapshot = await getDocs(servicesRef);
+            const container = document.getElementById('services-container');
+            container.innerHTML = '';
+            snapshot.forEach(doc => {
+                const service = { id: doc.id, ...doc.data() };
+                const card = document.createElement('div');
+                card.className = 'p-4 bg-gray-800 rounded-lg cursor-pointer border-2 border-transparent hover:border-amber-400 transition service-card';
+                card.dataset.service = JSON.stringify(service);
+                card.innerHTML = `<h3 class="font-bold text-lg text-white">${service.name}</h3><p class="text-sm text-gray-400">${service.description || ''}</p><div class="flex justify-between items-baseline mt-2"><p class="text-amber-400 font-bold">R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}</p><p class="text-xs text-gray-500">${service.duration} min</p></div>`;
+                container.appendChild(card);
+            });
+        }
+        
+        async function fetchAndRenderBarbers(shopId) {
+            const barbersRef = collection(db, `shops/${shopId}/barbers`);
+            const snapshot = await getDocs(barbersRef);
+            const container = document.getElementById('barbers-container');
+            container.innerHTML = '';
+            snapshot.forEach(doc => {
+                const barber = { id: doc.id, ...doc.data() };
+                const card = document.createElement('div');
+                card.className = 'text-center p-2 bg-gray-800 rounded-lg cursor-pointer border-2 border-transparent hover:border-amber-400 transition barber-card';
+                card.dataset.barber = JSON.stringify(barber);
+                card.innerHTML = `<img src="${barber.photo}" alt="${barber.name}" class="w-24 h-24 rounded-full mx-auto object-cover border-2 border-gray-700"><h3 class="font-bold text-md text-white mt-2">${barber.name}</h3><p class="text-xs text-gray-400">${barber.specialty || ''}</p>`;
+                container.appendChild(card);
+            });
+        }
+
+        async function generateAndRenderTimeslots() {
+            if (!booking.date || !booking.barber || !booking.service) return;
+            const timePickerMessage = document.getElementById('time-picker-message');
+            const container = document.getElementById('time-slots-container');
+            timePickerMessage.textContent = 'A procurar horários...';
+            timePickerMessage.style.display = 'block';
+            container.innerHTML = '';
+            
+            const openingTime = 9, closingTime = 18;
+            const serviceDuration = booking.service.duration;
+            const q = query(collection(db, `shops/${booking.shopId}/appointments`), where("barberId", "==", booking.barber.id), where("date", "==", booking.date));
+            const snapshot = await getDocs(q);
+            const existingAppointments = snapshot.docs.map(doc => doc.data().time);
+            const availableSlots = [];
+            for (let hour = openingTime; hour < closingTime; hour++) {
+                for (let minute = 0; minute < 60; minute += 15) {
+                    const slotDate = new Date(`${booking.date}T${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`);
+                    if (slotDate.getTime() + serviceDuration * 60000 > new Date(`${booking.date}T${String(closingTime).padStart(2,'0')}:00`).getTime()) continue;
+                    const slotTime = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                    const now = new Date();
+                    const today = now.toISOString().split('T')[0];
+                    if (booking.date === today && slotDate < now) continue;
+                    const isBooked = existingAppointments.includes(slotTime);
+                    if (!isBooked) availableSlots.push(slotTime);
+                }
+            }
+            if (availableSlots.length === 0) { timePickerMessage.textContent = 'Nenhum horário disponível.'; return; }
+            
+            timePickerMessage.style.display = 'none';
+            availableSlots.forEach(time => {
+                const button = document.createElement('button');
+                button.className = 'p-2 bg-gray-700 rounded-lg text-white hover:bg-amber-500 hover:text-gray-900 transition time-slot-button';
+                button.textContent = time;
+                container.appendChild(button);
+            });
+        }
+        
+        function selectService(service, cardElement) {
+            booking.service = service;
+            document.querySelectorAll('.service-card').forEach(el => el.classList.remove('selected-card'));
+            cardElement.classList.add('selected-card');
+            document.getElementById('step-2-barbers').classList.remove('hidden');
+            fetchAndRenderBarbers(booking.shopId);
+        }
+        function selectBarber(barber, cardElement) {
+            booking.barber = barber;
+            document.querySelectorAll('.barber-card').forEach(el => el.classList.remove('selected-card'));
+            cardElement.classList.add('selected-card');
+            document.getElementById('step-3-schedule').classList.remove('hidden');
+            generateAndRenderTimeslots();
+        }
+        function selectTime(time, buttonElement) {
+            booking.time = time;
+            document.querySelectorAll('.time-slot-button').forEach(el => el.classList.remove('selected-card'));
+            buttonElement.classList.add('selected-card');
+            document.getElementById('step-4-customer').classList.remove('hidden');
+        }
     </script>
 </body>
 </html>
