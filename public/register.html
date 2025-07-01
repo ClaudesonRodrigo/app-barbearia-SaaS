@@ -3,136 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crie a Sua Conta - AgendaBarber</title>
+    <title>Crie sua Conta - AgendaBarber</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
-    <style>
-        .font-body { font-family: 'Inter', sans-serif; }
-        .font-title { font-family: 'Playfair Display', serif; }
-        .cta-button {
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2);
-        }
-        .cta-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="font-body bg-gray-900 text-gray-300">
 
     <div class="min-h-screen flex flex-col items-center justify-center p-4">
-        <div class="w-full max-w-md">
-            <header class="text-center mb-8">
-                <a href="index.html" class="font-title text-4xl font-bold text-white">
-                    Agenda<span class="text-amber-400">Barber</span>
-                </a>
-                <p class="text-gray-400 mt-2">Comece o seu teste gratuito de 30 dias.</p>
-            </header>
-
-            <main class="bg-gray-800 p-8 rounded-lg shadow-2xl">
-                <form id="register-form" class="space-y-6">
+        <div class="w-full max-w-lg text-center">
+            <h1 class="font-title text-4xl font-bold text-amber-400">Registre sua Barbearia</h1>
+            <p class="text-gray-400 mt-2 mb-6">Comece a gerir seus agendamentos de forma simples.</p>
+        </div>
+        <main class="w-full max-w-lg bg-gray-800 p-8 rounded-lg shadow-2xl">
+            <form id="register-form" class="space-y-6">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label for="shop-name" class="block text-sm font-bold text-gray-300 mb-2">Nome da Barbearia</label>
-                        <input type="text" id="shop-name" name="shop-name" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
+                        <input type="text" id="shop-name" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
                     </div>
                     <div>
-                        <label for="owner-email" class="block text-sm font-bold text-gray-300 mb-2">Seu Email</label>
-                        <input type="email" id="owner-email" name="owner-email" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
+                        <label for="shop-address" class="block text-sm font-bold text-gray-300 mb-2">Endereço Completo</label>
+                        <input type="text" id="shop-address" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="owner-email" class="block text-sm font-bold text-gray-300 mb-2">Seu Email (para login)</label>
+                    <input type="email" id="owner-email" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="owner-password" class="block text-sm font-bold text-gray-300 mb-2">Crie uma Senha</label>
+                        <input type="password" id="owner-password" required minlength="6" class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
                     </div>
                     <div>
-                        <label for="owner-password" class="block text-sm font-bold text-gray-300 mb-2">Sua Senha</label>
-                        <input type="password" id="owner-password" name="owner-password" required minlength="6" class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
+                        <label for="owner-password-confirm" class="block text-sm font-bold text-gray-300 mb-2">Confirme a Senha</label>
+                        <input type="password" id="owner-password-confirm" required class="w-full p-3 bg-gray-700 rounded-lg text-white border-2 border-gray-600 focus:outline-none focus:border-amber-500 transition">
                     </div>
-                    <button type="submit" id="register-button" class="cta-button w-full bg-amber-400 text-gray-900 font-bold text-lg py-3 px-8 rounded-lg">Criar Minha Barbearia</button>
-                </form>
-                <div id="form-message" class="mt-4 text-center"></div>
-            </main>
-             <footer class="text-center mt-6">
-                <p class="text-sm text-gray-500">Já tem uma conta? <a href="dashboard.html" class="font-bold text-amber-400 hover:underline">Faça login</a></p>
-            </footer>
-        </div>
+                </div>
+
+                <button type="submit" id="register-button" class="cta-button w-full bg-amber-500 text-gray-900 font-bold text-lg py-3 px-8 rounded-lg hover:bg-amber-600 transition">Criar Conta e Aceder</button>
+            </form>
+            <div id="form-message" class="mt-4 text-center text-red-400 font-bold"></div>
+        </main>
+        <footer class="text-center mt-6">
+            <p class="text-sm text-gray-500">Já tem uma conta? <a href="dashboard.html" class="font-bold text-amber-400 hover:underline">Faça login</a></p>
+        </footer>
     </div>
 
-    <!-- Script de Registo Integrado -->
     <script type="module">
-        // Importa apenas o necessário do SDK do Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configuração do Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M",
-            authDomain: "barbeariasergipana-b32b6.firebaseapp.com",
-            projectId: "barbeariasergipana-b32b6",
-            storageBucket: "barbeariasergipana-b32b6.firebasestorage.app",
-            messagingSenderId: "562815971114",
-            appId: "1:562815971114:web:73e811a601c6b64e8ab853",
-            measurementId: "G-1M4H1Z3TV5"
-        };
-
-        // Inicializa os serviços Firebase
+        const firebaseConfig = { apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", authDomain: "barbeariasergipana-b32b6.firebaseapp.com", projectId: "barbeariasergipana-b32b6", storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", messagingSenderId: "562815971114", appId: "1:562815971114:web:73e811a601c6b64e8ab853", measurementId: "G-1M4H1Z3TV5" };
+        
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Elementos do DOM
         const registerForm = document.getElementById('register-form');
         const registerButton = document.getElementById('register-button');
         const formMessage = document.getElementById('form-message');
 
-        // Lógica de Registo
         registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault(); 
+            e.preventDefault();
+            
             registerButton.disabled = true;
-            registerButton.innerText = 'A criar...';
-            formMessage.innerText = '';
-            formMessage.classList.remove('text-red-500', 'text-green-500');
+            registerButton.textContent = 'Aguarde...';
+            formMessage.textContent = '';
 
-            const shopName = registerForm['shop-name'].value;
-            const ownerEmail = registerForm['owner-email'].value;
-            const ownerPassword = registerForm['owner-password'].value;
+            // Coletar dados do formulário
+            const shopName = document.getElementById('shop-name').value;
+            const shopAddress = document.getElementById('shop-address').value;
+            const email = document.getElementById('owner-email').value;
+            const password = document.getElementById('owner-password').value;
+            const passwordConfirm = document.getElementById('owner-password-confirm').value;
+
+            // Validação de senha
+            if (password !== passwordConfirm) {
+                formMessage.textContent = 'As senhas não coincidem.';
+                registerButton.disabled = false;
+                registerButton.textContent = 'Criar Conta e Aceder';
+                return;
+            }
 
             try {
-                // Cria o utilizador no Firebase Auth
-                const userCredential = await createUserWithEmailAndPassword(auth, ownerEmail, ownerPassword);
-                const user = userCredential.user;
+                // Passo 1: Criar o usuário na Autenticação do Firebase
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const newOwner = userCredential.user;
 
-                // Cria o documento da loja no Firestore
-                const shopRef = await addDoc(collection(db, "shops"), {
-                    ownerUid: user.uid,
-                    ownerEmail: ownerEmail,
+                // Passo 2: Criar o documento da barbearia no Firestore, associado ao usuário
+                const newShopData = {
+                    ownerUid: newOwner.uid,
                     shopName: shopName,
-                    createdAt: serverTimestamp(),
-                    subscriptionStatus: 'trialing'
-                });
-                
-                // SOLUÇÃO DEFINITIVA: Guarda no navegador um sinalizador para
-                // que o dashboard saiba que precisa de ser paciente.
-                sessionStorage.setItem('isNewRegistration', 'true');
+                    address: shopAddress,
+                    subscriptionStatus: 'trialing', // Começa com status de teste
+                    createdAt: Timestamp.now(),
+                    
+                    // Incluindo os novos campos com valores padrão
+                    operatingHours: {
+                        weekday: "09:00 - 18:00",
+                        saturday: "Fechado",
+                        sunday: "Fechado"
+                    },
+                    galleryImages: [] // Galeria começa vazia
+                };
 
-                // Redireciona para o dashboard
-                window.location.href = `dashboard.html`;
+                await addDoc(collection(db, "shops"), newShopData);
+                
+                // Passo 3: Redirecionar para o dashboard. O usuário já está logado.
+                sessionStorage.setItem('isNewRegistration', 'true');
+                window.location.href = 'dashboard.html';
 
             } catch (error) {
-                console.error("Erro no registo:", error);
-                registerButton.disabled = false;
-                registerButton.innerText = 'Criar Minha Barbearia';
-                formMessage.classList.add('text-red-500');
-
+                // Tratar erros do Firebase
                 if (error.code === 'auth/email-already-in-use') {
-                    formMessage.innerText = 'Este email já está a ser utilizado. Por favor, faça login ou use outro email.';
+                    formMessage.textContent = 'Este email já está em uso. Tente fazer login.';
                 } else if (error.code === 'auth/weak-password') {
-                    formMessage.innerText = 'A sua senha é muito fraca. Tente uma com pelo menos 6 caracteres.';
+                    formMessage.textContent = 'A senha é muito fraca. Tente uma com pelo menos 6 caracteres.';
                 } else {
-                    formMessage.innerText = 'Ocorreu um erro ao criar a sua conta. Tente novamente.';
+                    formMessage.textContent = 'Ocorreu um erro ao criar a conta. Tente novamente.';
+                    console.error('Erro de registo:', error);
                 }
+                registerButton.disabled = false;
+                registerButton.textContent = 'Criar Conta e Aceder';
             }
         });
     </script>
-
 </body>
 </html>
