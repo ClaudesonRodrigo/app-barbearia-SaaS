@@ -106,9 +106,240 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // --- TODO O SEU CÓDIGO JAVASCRIPT CONTINUA EXATAMENTE IGUAL ---
-        // (Não há necessidade de colar tudo aqui novamente, pois não foi alterado)
-        // ...
+        const SUPER_ADMIN_UID = "ftNGvDucWfZmdsrrZ9ffpWebOUU2";
+        let currentShop = null;
+        let isTestModeActive = false;
+
+        const loader = document.getElementById('full-page-loader');
+        const loginContainer = document.getElementById('login-container');
+        const dashboardContainer = document.getElementById('dashboard-container');
+        const loginForm = document.getElementById('login-form');
+        const logoutButton = document.getElementById('logout-button');
+        const loginMessage = document.getElementById('form-message');
+        const subscriptionStatusEl = document.getElementById('subscription-status');
+        const manageSubscriptionButton = document.getElementById('manage-subscription-button');
+
+        function showView(viewName) {
+            loader.style.display = 'none';
+            loginContainer.style.display = 'none';
+            dashboardContainer.style.display = 'none';
+            document.getElementById(viewName).style.display = 'block';
+            if(viewName === 'login-container') document.getElementById(viewName).style.display = 'flex';
+        }
+
+        async function getPaymentTestModeStatus() {
+            const configRef = doc(db, "platform_config", "payment");
+            const configSnap = await getDoc(configRef);
+            return configSnap.exists() ? configSnap.data().testMode : false;
+        }
+
+        async function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function findShopDataForUser(user, retries = 3) {
+            if (retries <= 0) return null;
+
+            const q = query(collection(db, 'shops'), where("ownerUid", "==", user.uid));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                const shopDoc = querySnapshot.docs[0];
+                return { id: shopDoc.id, ...shopDoc.data() };
+            } else {
+                const isNew = sessionStorage.getItem('isNewRegistration');
+                if (isNew) {
+                    console.log(`Dados da barbearia não encontrados. Tentando novamente em 1.5s... (${retries-1} tentativas restantes)`);
+                    await sleep(1500);
+                    return findShopDataForUser(user, retries - 1);
+                }
+                return null;
+            }
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                showView('login-container');
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const viewShopId = urlParams.get('shop_id_view');
+            let shopData;
+
+            if (user.uid === SUPER_ADMIN_UID && viewShopId) {
+                document.getElementById('support-banner').style.display = 'block';
+                const shopRef = doc(db, 'shops', viewShopId);
+                const shopSnap = await getDoc(shopRef);
+                shopData = shopSnap.exists() ? { id: shopSnap.id, ...shopSnap.data() } : null;
+            } else {
+                shopData = await findShopDataForUser(user);
+            }
+
+            if (shopData) {
+                sessionStorage.removeItem('isNewRegistration');
+                currentShop = shopData;
+                isTestModeActive = await getPaymentTestModeStatus();
+                initializeDashboard(user);
+                showView('dashboard-container');
+            } else {
+                alert("Não foi possível encontrar os dados da sua barbearia. Por favor, tente fazer login novamente.");
+                signOut(auth);
+            }
+        });
+
+        function initializeDashboard(user) {
+            document.getElementById('user-email').textContent = user.email;
+            document.getElementById('shop-name-title').textContent = currentShop.shopName;
+            
+            const publicLinkEl = document.getElementById('public-link');
+            const pageUrl = window.location.origin.includes('github') ? `${window.location.origin}/${window.location.pathname.split('/')[1]}/public/barbearia.html` : `${window.location.origin}/public/barbearia.html`;
+            const publicLink = `${pageUrl}?shop=${currentShop.id}`;
+            publicLinkEl.href = publicLink;
+            publicLinkEl.textContent = publicLink;
+
+            updateSubscriptionUI();
+            
+            const adminDatePicker = document.getElementById('admin-date-picker-dash');
+            const today = new Date().toISOString().split('T')[0];
+            adminDatePicker.value = today;
+            
+            listenToCollection('services');
+            listenToCollection('barbers');
+            listenToAppointmentsForDate(today);
+            setupForms();
+        }
+
+        function updateSubscriptionUI() {
+            const status = currentShop.subscriptionStatus || 'trialing';
+            const statusMap = { trialing: 'Em Teste Gratuito', active: 'Ativa', inactive: 'Inativa' };
+            subscriptionStatusEl.textContent = statusMap[status];
+            if (status === 'active') {
+                manageSubscriptionButton.textContent = 'Gerir Assinatura';
+            } else {
+                manageSubscriptionButton.textContent = 'Ativar Plano Profissional';
+            }
+        }
+
+        function listenToCollection(collectionName) {
+            const container = document.getElementById(`${collectionName}-list-admin`);
+            const q = query(collection(db, `shops/${currentShop.id}/${collectionName}`));
+            onSnapshot(q, (snapshot) => {
+                container.innerHTML = '';
+                if(snapshot.empty) { container.innerHTML = `<p class="text-sm text-gray-500">Nenhum item adicionado.</p>`; return; }
+                snapshot.forEach(doc => {
+                    const item = { id: doc.id, ...doc.data() };
+                    const itemEl = document.createElement('div');
+                    itemEl.className = "flex justify-between items-center bg-gray-700 p-2 rounded";
+                    itemEl.innerHTML = `<span>${item.name}</span><button data-id="${item.id}" class="delete-btn text-red-400 hover:text-red-600 font-bold">X</button>`;
+                    container.appendChild(itemEl);
+                });
+                container.querySelectorAll('.delete-btn').forEach(button => {
+                    button.onclick = () => deleteItem(collectionName, button.dataset.id);
+                });
+            });
+        }
+        
+        function listenToAppointmentsForDate(date) {
+             const container = document.getElementById('appointments-list-admin');
+             const q = query(collection(db, `shops/${currentShop.id}/appointments`), where("date", "==", date));
+             onSnapshot(q, (snapshot) => {
+                 container.innerHTML = '';
+                 if(snapshot.empty) { container.innerHTML = `<p class="text-sm text-gray-500">Nenhum agendamento para esta data.</p>`; return; }
+                 const appointments = snapshot.docs.map(doc => doc.data()).sort((a,b) => a.time.localeCompare(b.time));
+                 appointments.forEach(appt => {
+                     const el = document.createElement('div');
+                     el.className = 'bg-gray-700 p-3 rounded-lg mb-2';
+                     el.innerHTML = `<div class="flex justify-between items-center"><p class="font-bold text-white">${appt.time} - ${appt.serviceName}</p><p class="text-sm text-gray-400">${appt.barberName}</p></div><p class="text-sm text-amber-400 mt-1">Cliente: ${appt.userName}</p>`;
+                     container.appendChild(el);
+                 });
+             });
+        }
+        
+        async function deleteItem(collectionName, itemId) {
+            if (confirm(`Tem a certeza que quer apagar este item?`)) {
+                await deleteDoc(doc(db, `shops/${currentShop.id}/${collectionName}`, itemId));
+            }
+        }
+
+        function setupForms() {
+            const serviceForm = document.getElementById('service-form');
+            serviceForm.innerHTML = `
+                <input type="text" name="service-name" placeholder="Nome do Serviço" required class="w-full p-2 bg-gray-700 rounded text-white">
+                <input type="number" name="service-price" placeholder="Preço (ex: 25.50)" required class="w-full p-2 bg-gray-700 rounded text-white">
+                <input type="number" name="service-duration" placeholder="Duração (minutos)" required class="w-full p-2 bg-gray-700 rounded text-white">
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700">Adicionar Serviço</button>
+            `;
+            serviceForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newService = { name: e.target['service-name'].value, price: e.target['service-price'].value, duration: parseInt(e.target['service-duration'].value, 10) };
+                await addDoc(collection(db, `shops/${currentShop.id}/services`), newService);
+                serviceForm.reset();
+            });
+
+            const barberForm = document.getElementById('barber-form');
+            barberForm.innerHTML = `
+                <input type="text" name="barber-name" placeholder="Nome do Barbeiro" required class="w-full p-2 bg-gray-700 rounded text-white">
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700">Adicionar Barbeiro</button>
+            `;
+            barberForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newBarber = { name: e.target['barber-name'].value, photo: `https://placehold.co/400x400/1f2937/a8a29e?text=${e.target['barber-name'].value.charAt(0)}` };
+                await addDoc(collection(db, `shops/${currentShop.id}/barbers`), newBarber);
+                barberForm.reset();
+            });
+            
+            document.getElementById('admin-date-picker-dash').addEventListener('change', (e) => listenToAppointmentsForDate(e.target.value));
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('owner-email').value;
+            const password = document.getElementById('owner-password').value;
+            loginMessage.textContent = '';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                loginMessage.textContent = "Email ou senha inválidos.";
+            }
+        });
+
+        logoutButton.addEventListener('click', () => signOut(auth));
+        
+        manageSubscriptionButton.addEventListener('click', async () => {
+            if (!currentShop) return;
+            manageSubscriptionButton.disabled = true;
+            manageSubscriptionButton.textContent = 'A processar...';
+            if (isTestModeActive) {
+                console.log("Modo de Teste: Ativando subscrição diretamente.");
+                const shopRef = doc(db, "shops", currentShop.id);
+                await updateDoc(shopRef, { subscriptionStatus: 'active' });
+                alert("Modo de Teste: Subscrição ativada com sucesso!");
+                location.reload();
+            } else {
+                try {
+                    const response = await fetch('/.netlify/functions/create-mercadopago-checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ shopId: currentShop.id, ownerEmail: auth.currentUser.email }),
+                    });
+                    if (!response.ok) throw new Error('Falha na resposta da função Netlify.');
+                    const data = await response.json();
+                    if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+                    else throw new Error('URL de checkout não recebido.');
+                } catch (error) {
+                    console.error("Erro ao gerir subscrição:", error);
+                    alert("Ocorreu um erro ao tentar aceder ao portal de pagamentos.");
+                    manageSubscriptionButton.disabled = false;
+                    manageSubscriptionButton.textContent = 'Gerir Pagamento';
+                }
+            }
+        });
+        
+        document.getElementById('copy-link-button').addEventListener('click', () => {
+            navigator.clipboard.writeText(document.getElementById('public-link').href);
+            alert('Link copiado!');
+        });
     </script>
 </body>
 </html>
