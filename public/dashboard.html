@@ -193,10 +193,11 @@
             document.getElementById('shop-name-title').textContent = currentShop.shopName;
             
             const publicLinkEl = document.getElementById('public-link');
-            const pageUrl = window.location.origin.includes('github') ? `${window.location.origin}/${window.location.pathname.split('/')[1]}/public/barbearia.html` : `${window.location.origin}/public/barbearia.html`;
-            const publicLink = `${pageUrl}?shop=${currentShop.id}`;
-            publicLinkEl.href = publicLink;
-            publicLinkEl.textContent = publicLink;
+            // Lógica melhorada para construir o link público
+            const pageUrl = new URL('public/barbearia.html', window.location.href);
+            pageUrl.searchParams.set('shop', currentShop.id);
+            publicLinkEl.href = pageUrl.href;
+            publicLinkEl.textContent = pageUrl.href;
 
             updateSubscriptionUI();
             
@@ -227,8 +228,8 @@
             onSnapshot(q, (snapshot) => {
                 container.innerHTML = '';
                 if(snapshot.empty) { container.innerHTML = `<p class="text-sm text-gray-500">Nenhum item adicionado.</p>`; return; }
-                snapshot.forEach(doc => {
-                    const item = { id: doc.id, ...doc.data() };
+                snapshot.forEach(docSnap => {
+                    const item = { id: docSnap.id, ...docSnap.data() };
                     const itemEl = document.createElement('div');
                     itemEl.className = "flex justify-between items-center bg-gray-700 p-2 rounded";
                     itemEl.innerHTML = `<span>${item.name}</span><button data-id="${item.id}" class="delete-btn text-red-400 hover:text-red-600 font-bold">X</button>`;
@@ -266,7 +267,7 @@
             const serviceForm = document.getElementById('service-form');
             serviceForm.innerHTML = `
                 <input type="text" name="service-name" placeholder="Nome do Serviço" required class="w-full p-2 bg-gray-700 rounded text-white">
-                <input type="number" name="service-price" placeholder="Preço (ex: 25.50)" required class="w-full p-2 bg-gray-700 rounded text-white">
+                <input type="number" name="service-price" placeholder="Preço (ex: 25.50)" step="0.01" required class="w-full p-2 bg-gray-700 rounded text-white">
                 <input type="number" name="service-duration" placeholder="Duração (minutos)" required class="w-full p-2 bg-gray-700 rounded text-white">
                 <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700">Adicionar Serviço</button>
             `;
@@ -337,8 +338,9 @@
         });
         
         document.getElementById('copy-link-button').addEventListener('click', () => {
-            navigator.clipboard.writeText(document.getElementById('public-link').href);
-            alert('Link copiado!');
+            navigator.clipboard.writeText(document.getElementById('public-link').href)
+                .then(() => alert('Link copiado para a área de transferência!'))
+                .catch(err => console.error('Erro ao copiar link: ', err));
         });
     </script>
 </body>
