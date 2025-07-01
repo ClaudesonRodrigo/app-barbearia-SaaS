@@ -101,15 +101,7 @@
         import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, query, where, getDocs, doc, getDoc, onSnapshot, addDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = { 
-            apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", 
-            authDomain: "barbeariasergipana-b32b6.firebaseapp.com", 
-            projectId: "barbeariasergipana-b32b6", 
-            storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", 
-            messagingSenderId: "562815971114", 
-            appId: "1:562815971114:web:73e811a601c6b64e8ab853", 
-            measurementId: "G-1M4H1Z3TV5" 
-        };
+        const firebaseConfig = { apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", authDomain: "barbeariasergipana-b32b6.firebaseapp.com", projectId: "barbeariasergipana-b32b6", storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", messagingSenderId: "562815971114", appId: "1:562815971114:web:73e811a601c6b64e8ab853", measurementId: "G-1M4H1Z3TV5" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -206,7 +198,6 @@
             document.getElementById('shop-name-title').textContent = currentShop.shopName;
             
             const publicLinkEl = document.getElementById('public-link');
-            // Lógica robusta para construir o link público
             const link = `${window.location.origin}/barbearia.html?shop=${currentShop.id}`;
             publicLinkEl.href = link;
             publicLinkEl.textContent = link;
@@ -296,7 +287,9 @@
                     name: e.target['service-name'].value,
                     description: e.target['service-description'].value,
                     price: e.target['service-price'].value, 
-                    duration: parseInt(e.target['service-duration'].value, 10) 
+                    duration: parseInt(e.target['service-duration'].value, 10),
+                    // ALTERAÇÃO IMPORTANTE AQUI:
+                    ownerUid: currentShop.ownerUid 
                 };
                 await addDoc(collection(db, `shops/${currentShop.id}/services`), newService);
                 serviceForm.reset();
@@ -313,7 +306,9 @@
                 const newBarber = { 
                     name: e.target['barber-name'].value, 
                     specialty: e.target['barber-specialty'].value,
-                    photo: `https://placehold.co/400x400/1f2937/a8a29e?text=${e.target['barber-name'].value.charAt(0)}` 
+                    photo: `https://placehold.co/400x400/1f2937/a8a29e?text=${e.target['barber-name'].value.charAt(0)}`,
+                    // ALTERAÇÃO IMPORTANTE AQUI:
+                    ownerUid: currentShop.ownerUid
                 };
                 await addDoc(collection(db, `shops/${currentShop.id}/barbers`), newBarber);
                 barberForm.reset();
