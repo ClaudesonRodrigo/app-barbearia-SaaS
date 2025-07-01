@@ -1,3 +1,11 @@
+
+Gemini
+Resumir o conteúdo desta pasta
+Analisar cada arquivo
+desta pasta
+O que o Gemini pode fazer com as pastas
+no Google Drive
+O Gemini para Workspace pode cometer erros, inclusive sobre pessoas. Por isso, cheque as respostas. Saiba mais
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -12,10 +20,12 @@
 </head>
 <body class="font-body bg-gray-900 text-gray-300">
 
+    <!-- Ecrã de Carregamento Inicial -->
     <div id="full-page-loader" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
         <p class="text-white text-lg">A verificar sessão...</p>
     </div>
 
+    <!-- Container do Login (Mostrado se o utilizador não estiver autenticado) -->
     <div id="login-container" class="min-h-screen flex-col items-center justify-center p-4 hidden">
         <div class="w-full max-w-md text-center">
             <h1 class="font-title text-4xl font-bold text-amber-400">Acesso ao Painel</h1>
@@ -40,6 +50,7 @@
         </div>
     </div>
     
+    <!-- Container do Dashboard (Mostrado se o utilizador estiver autenticado) -->
     <div id="dashboard-container" class="hidden">
         <header id="dashboard-header" class="bg-gray-800 shadow-md">
             <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -54,20 +65,19 @@
         </header>
 
         <main id="dashboard-main" class="container mx-auto p-6">
-            <div id="support-banner" class="hidden bg-yellow-500 text-yellow-900 font-bold text-center p-2 rounded-lg mb-6">
-                <p>Você está em modo de suporte. As alterações feitas aqui afetarão a barbearia do seu cliente.</p>
-            </div>
             <div id="welcome-section" class="bg-gray-800 p-6 rounded-lg mb-8">
                 <h1 id="shop-name-title" class="text-3xl font-bold text-white">Carregando barbearia...</h1>
                 <p class="text-gray-400 mt-2">Este é o seu centro de controlo. Gira os seus serviços, barbeiros e agendamentos aqui.</p>
                 <div class="mt-4 bg-gray-700 p-4 rounded-lg">
-                    <p class="text-sm font-bold text-amber-300">Link da página de agendamento:</p>
+                    <p class="text-sm font-bold text-amber-300">Link da sua página de agendamento:</p>
                     <a id="public-link" href="#" target="_blank" class="text-amber-400 hover:underline break-all">A gerar link...</a>
                     <button id="copy-link-button" class="ml-2 bg-gray-600 text-white px-3 py-1 text-xs font-bold rounded hover:bg-gray-500">Copiar</button>
                 </div>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-1 space-y-8">
+                    
+                    <!-- SECÇÃO DE SUBSCRIÇÃO ATUALIZADA -->
                     <div class="bg-gray-800 p-6 rounded-lg border border-amber-400">
                         <h2 class="text-2xl font-bold text-white mb-4">Subscrição</h2>
                         <div class="space-y-2">
@@ -76,14 +86,25 @@
                         </div>
                         <button id="manage-subscription-button" class="cta-button w-full mt-4 bg-amber-500 text-gray-900 font-bold py-2 rounded-lg hover:bg-amber-600">Gerir Pagamento</button>
                     </div>
+
                     <div class="bg-gray-800 p-6 rounded-lg">
                         <h2 class="text-2xl font-bold text-white mb-4">Gerir Serviços</h2>
-                        <form id="service-form" class="space-y-4"></form>
+                        <form id="service-form" class="space-y-4">
+                            <input type="text" id="service-name" placeholder="Nome do Serviço" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <input type="text" id="service-price" placeholder="Preço (ex: R$ 40,00)" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <input type="number" id="service-duration" placeholder="Duração (em minutos)" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <textarea id="service-description" placeholder="Breve descrição do serviço" class="w-full p-3 bg-gray-700 rounded-lg" rows="2" required></textarea>
+                            <button type="submit" class="w-full bg-amber-500 text-gray-900 font-bold py-2 rounded-lg hover:bg-amber-600">Adicionar Serviço</button>
+                        </form>
                         <div id="services-list-admin" class="mt-6 space-y-2"></div>
                     </div>
                     <div class="bg-gray-800 p-6 rounded-lg">
                         <h2 class="text-2xl font-bold text-white mb-4">Gerir Barbeiros</h2>
-                        <form id="barber-form" class="space-y-4"></form>
+                        <form id="barber-form" class="space-y-4">
+                            <input type="text" id="barber-name" placeholder="Nome do Barbeiro" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <input type="text" id="barber-specialty" placeholder="Especialidade" class="w-full p-3 bg-gray-700 rounded-lg" required>
+                            <button type="submit" class="w-full bg-amber-500 text-gray-900 font-bold py-2 rounded-lg hover:bg-amber-600">Adicionar Barbeiro</button>
+                        </form>
                         <div id="barbers-list-admin" class="mt-6 space-y-2"></div>
                     </div>
                 </div>
@@ -99,16 +120,14 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, where, getDocs, doc, getDoc, onSnapshot, addDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", authDomain: "barbeariasergipana-b32b6.firebaseapp.com", projectId: "barbeariasergipana-b32b6", storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", messagingSenderId: "562815971114", appId: "1:562815971114:web:73e811a601c6b64e8ab853", measurementId: "G-1M4H1Z3TV5" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        const SUPER_ADMIN_UID = "ftNGvDucWfZmdsrrZ9ffpWebOUU2";
+
         let currentShop = null;
-        let isTestModeActive = false;
 
         const loader = document.getElementById('full-page-loader');
         const loginContainer = document.getElementById('login-container');
@@ -124,99 +143,68 @@
             loginContainer.style.display = 'none';
             dashboardContainer.style.display = 'none';
             document.getElementById(viewName).style.display = 'block';
-            if(viewName === 'login-container') document.getElementById(viewName).style.display = 'flex';
-        }
-
-        async function getPaymentTestModeStatus() {
-            try {
-                const configRef = doc(db, "platform_config", "payment");
-                const configSnap = await getDoc(configRef);
-                return configSnap.exists() ? configSnap.data().testMode : false;
-            } catch (error) {
-                console.error("Erro ao buscar status do modo de pagamento:", error);
-                return false;
-            }
-        }
-
-        async function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        async function findShopDataForUser(user, retries = 3) {
-            if (retries <= 0) return null;
-            const q = query(collection(db, 'shops'), where("ownerUid", "==", user.uid));
-            try {
-                const querySnapshot = await getDocs(q);
-                if (!querySnapshot.empty) {
-                    const shopDoc = querySnapshot.docs[0];
-                    return { id: shopDoc.id, ...shopDoc.data() };
-                } else {
-                    const isNew = sessionStorage.getItem('isNewRegistration');
-                    if (isNew) {
-                        console.log(`Dados da barbearia não encontrados. Tentando novamente em 1.5s... (${retries-1} tentativas restantes)`);
-                        await sleep(1500);
-                        return findShopDataForUser(user, retries - 1);
-                    }
-                    return null;
-                }
-            } catch (error) {
-                 console.error("Erro ao procurar dados da loja:", error);
-                 return null;
-            }
+            if (viewName === 'login-container') document.getElementById(viewName).style.display = 'flex';
         }
 
         onAuthStateChanged(auth, async (user) => {
-            if (!user) {
+            if (user) {
+                const q = query(collection(db, 'shops'), where("ownerUid", "==", user.uid));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    const shopDoc = querySnapshot.docs[0];
+                    currentShop = { id: shopDoc.id, ...shopDoc.data() };
+                    
+                    if (currentShop.subscriptionStatus === 'inactive') {
+                        alert("A sua subscrição está inativa. Por favor, entre em contacto com o suporte.");
+                        signOut(auth);
+                        return;
+                    }
+                    
+                    initializeDashboard(user);
+                    showView('dashboard-container');
+                } else {
+                    const isNewRegistration = sessionStorage.getItem('isNewRegistration');
+                    if(isNewRegistration){
+                        sessionStorage.removeItem('isNewRegistration');
+                        setTimeout(()=> location.reload(), 2000);
+                    } else {
+                        alert("Não foi possível encontrar os dados da sua barbearia. Por favor, tente fazer login novamente.");
+                        signOut(auth);
+                    }
+                }
+            } else {
                 showView('login-container');
-                return;
-            }
-            const urlParams = new URLSearchParams(window.location.search);
-            const viewShopId = urlParams.get('shop_id_view');
-            let shopData;
-            if (user.uid === SUPER_ADMIN_UID && viewShopId) {
-                document.getElementById('support-banner').style.display = 'block';
-                const shopRef = doc(db, 'shops', viewShopId);
-                const shopSnap = await getDoc(shopRef);
-                shopData = shopSnap.exists() ? { id: shopSnap.id, ...shopSnap.data() } : null;
-            } else {
-                shopData = await findShopDataForUser(user);
-            }
-            if (shopData) {
-                sessionStorage.removeItem('isNewRegistration');
-                currentShop = shopData;
-                isTestModeActive = await getPaymentTestModeStatus();
-                initializeDashboard(user);
-                showView('dashboard-container');
-            } else {
-                alert("Não foi possível encontrar os dados da sua barbearia. Por favor, tente fazer login novamente.");
-                signOut(auth);
             }
         });
 
         function initializeDashboard(user) {
             document.getElementById('user-email').textContent = user.email;
             document.getElementById('shop-name-title').textContent = currentShop.shopName;
-            
-            const publicLinkEl = document.getElementById('public-link');
-            const link = `${window.location.origin}/barbearia.html?shop=${currentShop.id}`;
-            publicLinkEl.href = link;
-            publicLinkEl.textContent = link;
-            
+            const publicLink = document.getElementById('public-link');
+            publicLink.href = `barbearia.html?shop=${currentShop.id}`;
+            publicLink.textContent = publicLink.href;
+
             updateSubscriptionUI();
-            
+
             const adminDatePicker = document.getElementById('admin-date-picker-dash');
             const today = new Date().toISOString().split('T')[0];
             adminDatePicker.value = today;
-            
+
             listenToCollection('services');
             listenToCollection('barbers');
             listenToAppointmentsForDate(today);
+
             setupForms();
         }
-
+        
         function updateSubscriptionUI() {
             const status = currentShop.subscriptionStatus || 'trialing';
-            const statusMap = { trialing: 'Em Teste Gratuito', active: 'Ativa', inactive: 'Inativa' };
+            const statusMap = {
+                trialing: 'Em Teste Gratuito',
+                active: 'Ativa',
+                inactive: 'Inativa'
+            };
             subscriptionStatusEl.textContent = statusMap[status];
             if (status === 'active') {
                 manageSubscriptionButton.textContent = 'Gerir Assinatura';
@@ -227,12 +215,12 @@
 
         function listenToCollection(collectionName) {
             const container = document.getElementById(`${collectionName}-list-admin`);
-            const q = query(collection(db, `shops/${currentShop.id}/${collectionName}`));
+            const q = collection(db, `shops/${currentShop.id}/${collectionName}`);
             onSnapshot(q, (snapshot) => {
                 container.innerHTML = '';
                 if(snapshot.empty) { container.innerHTML = `<p class="text-sm text-gray-500">Nenhum item adicionado.</p>`; return; }
-                snapshot.forEach(docSnap => {
-                    const item = { id: docSnap.id, ...docSnap.data() };
+                snapshot.forEach(doc => {
+                    const item = { id: doc.id, ...doc.data() };
                     const itemEl = document.createElement('div');
                     itemEl.className = "flex justify-between items-center bg-gray-700 p-2 rounded";
                     itemEl.innerHTML = `<span>${item.name}</span><button data-id="${item.id}" class="delete-btn text-red-400 hover:text-red-600 font-bold">X</button>`;
@@ -241,9 +229,6 @@
                 container.querySelectorAll('.delete-btn').forEach(button => {
                     button.onclick = () => deleteItem(collectionName, button.dataset.id);
                 });
-            }, (error) => {
-                console.error(`Erro no ouvinte de ${collectionName}:`, error);
-                alert(`Erro ao carregar dados de ${collectionName}. Verifique as permissões e a conexão.`);
             });
         }
         
@@ -251,18 +236,15 @@
              const container = document.getElementById('appointments-list-admin');
              const q = query(collection(db, `shops/${currentShop.id}/appointments`), where("date", "==", date));
              onSnapshot(q, (snapshot) => {
-                 container.innerHTML = '';
-                 if(snapshot.empty) { container.innerHTML = `<p class="text-sm text-gray-500">Nenhum agendamento para esta data.</p>`; return; }
-                 const appointments = snapshot.docs.map(doc => doc.data()).sort((a,b) => a.time.localeCompare(b.time));
-                 appointments.forEach(appt => {
-                     const el = document.createElement('div');
-                     el.className = 'bg-gray-700 p-3 rounded-lg mb-2';
-                     el.innerHTML = `<div class="flex justify-between items-center"><p class="font-bold text-white">${appt.time} - ${appt.serviceName}</p><p class="text-sm text-gray-400">${appt.barberName}</p></div><p class="text-sm text-amber-400 mt-1">Cliente: ${appt.userName}</p>`;
-                     container.appendChild(el);
-                 });
-             }, (error) => {
-                console.error(`Erro no ouvinte de agendamentos:`, error);
-                alert(`Erro ao carregar agendamentos. Verifique as permissões e a conexão.`);
+                container.innerHTML = '';
+                if(snapshot.empty) { container.innerHTML = `<p class="text-sm text-gray-500">Nenhum agendamento para esta data.</p>`; return; }
+                const appointments = snapshot.docs.map(doc => doc.data()).sort((a,b) => a.time.localeCompare(b.time));
+                appointments.forEach(appt => {
+                    const el = document.createElement('div');
+                    el.className = 'bg-gray-700 p-3 rounded-lg mb-2';
+                    el.innerHTML = `<div class="flex justify-between items-center"><p class="font-bold text-white">${appt.time} - ${appt.serviceName}</p><p class="text-sm text-gray-400">${appt.barberName}</p></div><p class="text-sm text-amber-400 mt-1">Cliente: ${appt.userName}</p>`;
+                    container.appendChild(el);
+                });
              });
         }
         
@@ -274,47 +256,22 @@
 
         function setupForms() {
             const serviceForm = document.getElementById('service-form');
-            serviceForm.innerHTML = `
-                <input type="text" name="service-name" placeholder="Nome do Serviço" required class="w-full p-2 bg-gray-700 rounded text-white">
-                <input type="text" name="service-description" placeholder="Descrição (ex: Corte e Barba)" class="w-full p-2 bg-gray-700 rounded text-white">
-                <input type="number" name="service-price" placeholder="Preço (ex: 25.50)" step="0.01" required class="w-full p-2 bg-gray-700 rounded text-white">
-                <input type="number" name="service-duration" placeholder="Duração (minutos)" required class="w-full p-2 bg-gray-700 rounded text-white">
-                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700">Adicionar Serviço</button>
-            `;
             serviceForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const newService = { 
-                    name: e.target['service-name'].value,
-                    description: e.target['service-description'].value,
-                    price: e.target['service-price'].value, 
-                    duration: parseInt(e.target['service-duration'].value, 10),
-                    // ALTERAÇÃO IMPORTANTE AQUI:
-                    ownerUid: currentShop.ownerUid 
-                };
+                const newService = { name: serviceForm['service-name'].value, price: serviceForm['service-price'].value, duration: parseInt(serviceForm['service-duration'].value, 10), description: serviceForm['service-description'].value };
                 await addDoc(collection(db, `shops/${currentShop.id}/services`), newService);
                 serviceForm.reset();
             });
 
             const barberForm = document.getElementById('barber-form');
-            barberForm.innerHTML = `
-                <input type="text" name="barber-name" placeholder="Nome do Barbeiro" required class="w-full p-2 bg-gray-700 rounded text-white">
-                <input type="text" name="barber-specialty" placeholder="Especialidade (ex: Barba e Cabelo)" class="w-full p-2 bg-gray-700 rounded text-white">
-                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700">Adicionar Barbeiro</button>
-            `;
             barberForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const newBarber = { 
-                    name: e.target['barber-name'].value, 
-                    specialty: e.target['barber-specialty'].value,
-                    photo: `https://placehold.co/400x400/1f2937/a8a29e?text=${e.target['barber-name'].value.charAt(0)}`,
-                    // ALTERAÇÃO IMPORTANTE AQUI:
-                    ownerUid: currentShop.ownerUid
-                };
+                const newBarber = { name: barberForm['barber-name'].value, specialty: barberForm['barber-specialty'].value, photo: `https://placehold.co/400x400/1f2937/a8a29e?text=${barberForm['barber-name'].value.charAt(0)}` };
                 await addDoc(collection(db, `shops/${currentShop.id}/barbers`), newBarber);
                 barberForm.reset();
             });
             
-            document.getElementById('admin-date-picker-dash').addEventListener('change', (e) => listenToAppointmentsForDate(e.target.value));
+             document.getElementById('admin-date-picker-dash').addEventListener('change', (e) => listenToAppointmentsForDate(e.target.value));
         }
 
         loginForm.addEventListener('submit', async (e) => {
@@ -331,40 +288,47 @@
 
         logoutButton.addEventListener('click', () => signOut(auth));
         
+        // **NOVA LÓGICA:** Event listener para o botão de gestão de subscrição
         manageSubscriptionButton.addEventListener('click', async () => {
             if (!currentShop) return;
+
             manageSubscriptionButton.disabled = true;
-            manageSubscriptionButton.textContent = 'A processar...';
-            if (isTestModeActive) {
-                console.log("Modo de Teste: Ativando subscrição diretamente.");
-                const shopRef = doc(db, "shops", currentShop.id);
-                await updateDoc(shopRef, { subscriptionStatus: 'active' });
-                alert("Modo de Teste: Subscrição ativada com sucesso!");
-                location.reload();
-            } else {
-                try {
-                    const response = await fetch('/.netlify/functions/create-mercadopago-checkout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ shopId: currentShop.id, ownerEmail: auth.currentUser.email }),
-                    });
-                    if (!response.ok) throw new Error('Falha na resposta da função Netlify.');
-                    const data = await response.json();
-                    if (data.checkoutUrl) window.location.href = data.checkoutUrl;
-                    else throw new Error('URL de checkout não recebido.');
-                } catch (error) {
-                    console.error("Erro ao gerir subscrição:", error);
-                    alert("Ocorreu um erro ao tentar aceder ao portal de pagamentos.");
-                    manageSubscriptionButton.disabled = false;
-                    manageSubscriptionButton.textContent = 'Gerir Pagamento';
+            manageSubscriptionButton.textContent = 'A gerar link...';
+
+            try {
+                // Chama a nossa função Netlify para criar a sessão de checkout
+                const response = await fetch('/.netlify/functions/create-mercadopago-checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        shopId: currentShop.id,
+                        ownerEmail: auth.currentUser.email
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Falha na resposta da função Netlify.');
                 }
+                
+                const data = await response.json();
+
+                if (data.checkoutUrl) {
+                    // Redireciona o utilizador para a página de pagamento do Mercado Pago
+                    window.location.href = data.checkoutUrl;
+                } else {
+                    throw new Error('URL de checkout não recebido.');
+                }
+
+            } catch (error) {
+                console.error("Erro ao gerir subscrição:", error);
+                alert("Ocorreu um erro ao tentar aceder ao portal de pagamentos. Tente novamente.");
+                manageSubscriptionButton.disabled = false;
+                updateSubscriptionUI(); // Restaura o texto do botão
             }
         });
         
         document.getElementById('copy-link-button').addEventListener('click', () => {
-            navigator.clipboard.writeText(document.getElementById('public-link').href)
-                .then(() => alert('Link copiado para a área de transferência!'))
-                .catch(err => console.error('Erro ao copiar link: ', err));
+            navigator.clipboard.writeText(document.getElementById('public-link').href);
         });
     </script>
 </body>
