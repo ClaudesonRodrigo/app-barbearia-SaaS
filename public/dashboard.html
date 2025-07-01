@@ -101,16 +101,7 @@
         import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, query, where, getDocs, doc, getDoc, onSnapshot, addDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // VERIFIQUE SE ESTES DADOS CORRESPONDEM EXATAMENTE AOS DO SEU PAINEL FIREBASE
-        const firebaseConfig = { 
-            apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", 
-            authDomain: "barbeariasergipana-b32b6.firebaseapp.com", 
-            projectId: "barbeariasergipana-b32b6", 
-            storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", 
-            messagingSenderId: "562815971114", 
-            appId: "1:562815971114:web:73e811a601c6b64e8ab853", 
-            measurementId: "G-1M4H1Z3TV5" 
-        };
+        const firebaseConfig = { apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", authDomain: "barbeariasergipana-b32b6.firebaseapp.com", projectId: "barbeariasergipana-b32b6", storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", messagingSenderId: "562815971114", appId: "1:562815971114:web:73e811a601c6b64e8ab853", measurementId: "G-1M4H1Z3TV5" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -137,9 +128,14 @@
         }
 
         async function getPaymentTestModeStatus() {
-            const configRef = doc(db, "platform_config", "payment");
-            const configSnap = await getDoc(configRef);
-            return configSnap.exists() ? configSnap.data().testMode : false;
+            try {
+                const configRef = doc(db, "platform_config", "payment");
+                const configSnap = await getDoc(configRef);
+                return configSnap.exists() ? configSnap.data().testMode : false;
+            } catch (error) {
+                console.error("Erro ao buscar status do modo de pagamento:", error);
+                return false; // Assume modo de produção em caso de erro
+            }
         }
 
         async function sleep(ms) {
@@ -149,18 +145,23 @@
         async function findShopDataForUser(user, retries = 3) {
             if (retries <= 0) return null;
             const q = query(collection(db, 'shops'), where("ownerUid", "==", user.uid));
-            const querySnapshot = await getDocs(q);
-            if (!querySnapshot.empty) {
-                const shopDoc = querySnapshot.docs[0];
-                return { id: shopDoc.id, ...shopDoc.data() };
-            } else {
-                const isNew = sessionStorage.getItem('isNewRegistration');
-                if (isNew) {
-                    console.log(`Dados da barbearia não encontrados. Tentando novamente em 1.5s... (${retries-1} tentativas restantes)`);
-                    await sleep(1500);
-                    return findShopDataForUser(user, retries - 1);
+            try {
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    const shopDoc = querySnapshot.docs[0];
+                    return { id: shopDoc.id, ...shopDoc.data() };
+                } else {
+                    const isNew = sessionStorage.getItem('isNewRegistration');
+                    if (isNew) {
+                        console.log(`Dados da barbearia não encontrados. Tentando novamente em 1.5s... (${retries-1} tentativas restantes)`);
+                        await sleep(1500);
+                        return findShopDataForUser(user, retries - 1);
+                    }
+                    return null;
                 }
-                return null;
+            } catch (error) {
+                 console.error("Erro ao procurar dados da loja:", error);
+                 return null;
             }
         }
 
@@ -195,15 +196,19 @@
         function initializeDashboard(user) {
             document.getElementById('user-email').textContent = user.email;
             document.getElementById('shop-name-title').textContent = currentShop.shopName;
+            
             const publicLinkEl = document.getElementById('public-link');
-            const pageUrl = new URL('public/barbearia.html', window.location.href);
-            pageUrl.searchParams.set('shop', currentShop.id);
-            publicLinkEl.href = pageUrl.href;
-            publicLinkEl.textContent = pageUrl.href;
+            // Lógica robusta para construir o link público
+            const link = `${window.location.origin}/public/barbearia.html?shop=${currentShop.id}`;
+            publicLinkEl.href = link;
+            publicLinkEl.textContent = link;
+            
             updateSubscriptionUI();
+            
             const adminDatePicker = document.getElementById('admin-date-picker-dash');
             const today = new Date().toISOString().split('T')[0];
             adminDatePicker.value = today;
+            
             listenToCollection('services');
             listenToCollection('barbers');
             listenToAppointmentsForDate(today);
