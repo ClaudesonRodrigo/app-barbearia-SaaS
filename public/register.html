@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 <body class="font-body bg-gray-900 text-gray-300">
 
@@ -52,7 +52,7 @@
             <div id="form-message" class="mt-4 text-center text-red-400 font-bold"></div>
         </main>
         <footer class="text-center mt-6">
-            <p class="text-sm text-gray-500">Já tem uma conta? <a href="dashboard.html" class="font-bold text-amber-400 hover:underline">Faça login</a></p>
+            <p class="text-sm text-gray-500">Já tem uma conta? <a href="../dashboard.html" class="font-bold text-amber-400 hover:underline">Faça login</a></p>
         </footer>
     </div>
 
@@ -61,7 +61,16 @@
         import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", authDomain: "barbeariasergipana-b32b6.firebaseapp.com", projectId: "barbeariasergipana-b32b6", storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", messagingSenderId: "562815971114", appId: "1:562815971114:web:73e811a601c6b64e8ab853", measurementId: "G-1M4H1Z3TV5" };
+        // VERIFIQUE SE ESTES DADOS CORRESPONDEM EXATAMENTE AOS DO SEU PAINEL FIREBASE
+        const firebaseConfig = { 
+            apiKey: "AIzaSyD69YUDxKUdLE6ndt_22YHR7FMJ6miXf9M", 
+            authDomain: "barbeariasergipana-b32b6.firebaseapp.com", 
+            projectId: "barbeariasergipana-b32b6", 
+            storageBucket: "barbeariasergipana-b32b6.firebasestorage.app", 
+            messagingSenderId: "562815971114", 
+            appId: "1:562815971114:web:73e811a601c6b64e8ab853", 
+            measurementId: "G-1M4H1Z3TV5" 
+        };
         
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -78,14 +87,12 @@
             registerButton.textContent = 'Aguarde...';
             formMessage.textContent = '';
 
-            // Coletar dados do formulário
             const shopName = document.getElementById('shop-name').value;
             const shopAddress = document.getElementById('shop-address').value;
             const email = document.getElementById('owner-email').value;
             const password = document.getElementById('owner-password').value;
             const passwordConfirm = document.getElementById('owner-password-confirm').value;
 
-            // Validação de senha
             if (password !== passwordConfirm) {
                 formMessage.textContent = 'As senhas não coincidem.';
                 registerButton.disabled = false;
@@ -94,35 +101,25 @@
             }
 
             try {
-                // Passo 1: Criar o usuário na Autenticação do Firebase
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const newOwner = userCredential.user;
 
-                // Passo 2: Criar o documento da barbearia no Firestore, associado ao usuário
                 const newShopData = {
                     ownerUid: newOwner.uid,
                     shopName: shopName,
                     address: shopAddress,
-                    subscriptionStatus: 'trialing', // Começa com status de teste
+                    subscriptionStatus: 'trialing',
                     createdAt: Timestamp.now(),
-                    
-                    // Incluindo os novos campos com valores padrão
-                    operatingHours: {
-                        weekday: "09:00 - 18:00",
-                        saturday: "Fechado",
-                        sunday: "Fechado"
-                    },
-                    galleryImages: [] // Galeria começa vazia
+                    operatingHours: { weekday: "09:00 - 18:00", saturday: "Fechado", sunday: "Fechado" },
+                    galleryImages: []
                 };
 
                 await addDoc(collection(db, "shops"), newShopData);
                 
-                // Passo 3: Redirecionar para o dashboard. O usuário já está logado.
                 sessionStorage.setItem('isNewRegistration', 'true');
-                window.location.href = 'dashboard.html';
+                window.location.href = '../dashboard.html';
 
             } catch (error) {
-                // Tratar erros do Firebase
                 if (error.code === 'auth/email-already-in-use') {
                     formMessage.textContent = 'Este email já está em uso. Tente fazer login.';
                 } else if (error.code === 'auth/weak-password') {
