@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="font-body bg-gray-900 text-gray-300">
 
@@ -52,7 +52,7 @@
             <div id="form-message" class="mt-4 text-center text-red-400 font-bold"></div>
         </main>
         <footer class="text-center mt-6">
-             <p class="text-sm text-gray-500">Já tem uma conta? <a href="../dashboard.html" class="font-bold text-amber-400 hover:underline">Faça login</a></p>
+            <p class="text-sm text-gray-500">Já tem uma conta? <a href="dashboard.html" class="font-bold text-amber-400 hover:underline">Faça login</a></p>
         </footer>
     </div>
 
@@ -116,8 +116,8 @@
                 await addDoc(collection(db, "shops"), newShopData);
                 
                 sessionStorage.setItem('isNewRegistration', 'true');
-                 // CAMINHO CORRIGIDO: Leva para o dashboard na pasta raiz
-                window.location.href = '../dashboard.html';
+                // Caminho Corrigido
+                window.location.href = 'dashboard.html';
 
             } catch (error) {
                 if (error.code === 'auth/email-already-in-use') {
